@@ -26,6 +26,7 @@ class UserController extends Controller
         }
         $user->info;
         $user->documents;
+        $user->properties;
 
         return response()->json($user, 200);
     }

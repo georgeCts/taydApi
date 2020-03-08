@@ -8,6 +8,7 @@ use Illuminate\Notifications\Notifiable;
 use Laravel\Passport\HasApiTokens;
 use App\UserInfo;
 use App\UserDocument;
+use App\UserProperty;
 
 class User extends Authenticatable
 {
@@ -47,4 +48,9 @@ class User extends Authenticatable
     public function documents() {
         return $this->hasMany(UserDocument::class);
     }
+
+    public function properties() {
+        return $this->hasMany(UserProperty::class);
+    }
+
 }

@@ -20,10 +20,14 @@ Route::group(['prefix' => 'auth'], function () {
 
 Route::group(['middleware' => 'auth:api'], function() {
     Route::group(['prefix' => 'users'], function () {
-    Route::get('/{id}', 'UserController@get');
+        Route::get('/{id}', 'UserController@get');
         //Route::post('/', 'UserController@store');
-        //Route::post('/download', 'UserController@download');
         Route::post('/upload_document', 'UserController@uploadDocument');
         //Route::put('/', 'UserController@update');
+    });
+
+    Route::group(['prefix' => 'properties'], function () {
+        Route::post('/', 'PropertyController@store');
+        Route::get('/{id}', 'PropertyController@get');
     });
 });

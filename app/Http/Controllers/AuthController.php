@@ -65,7 +65,7 @@ class AuthController extends Controller
             $info->name         = $request->name;
             $info->last_name    = $request->last_name;
             $info->phone        = $request->phone;
-            $info->photo        = "/storage//photos/default.jpg";
+            $info->photo        = "/storage/photos/default.jpg";
             $info->save();
         }
 
