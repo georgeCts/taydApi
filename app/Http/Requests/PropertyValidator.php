@@ -29,6 +29,7 @@ class PropertyValidator extends FormRequest
             //
         ];
     }
+
     public function store(Request $request) {
         $validator = Validator::make($request->all(), [
             'user_id'           => 'required|integer|exists:users,id',

@@ -18,7 +18,7 @@ class CreateServicesTable extends Migration
             $table->unsignedBigInteger('request_user_id');
             $table->unsignedBigInteger('provider_user_id')->nullable();
             $table->unsignedBigInteger('user_property_id');
-            $table->unsignedBigInteger('stripe_customer_source_id');
+            $table->unsignedBigInteger('stripe_customer_source_id')->nullable();
             $table->boolean('is_accepted')->default(false);
             $table->dateTime('dt_start');
             $table->dateTime('dt_finish')->nullable();
