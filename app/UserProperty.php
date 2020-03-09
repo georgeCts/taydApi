@@ -30,6 +30,6 @@ class UserProperty extends Model
     }
 
     public function propertyType() {
-        return $this->hasOne(PropertyType::class);
+        return $this->hasOne(PropertyType::class, 'id', 'property_type_id');
     }
 }

@@ -30,4 +30,10 @@ Route::group(['middleware' => 'auth:api'], function() {
         Route::post('/', 'PropertyController@store');
         Route::get('/{id}', 'PropertyController@get');
     });
+
+    Route::group(['prefix' => 'services'], function () {
+        Route::post('/', 'ServiceController@store');
+        Route::get('/{id}', 'ServiceController@get');
+        Route::delete('/cancel/{id}', 'ServiceController@cancel');
+    });
 });
