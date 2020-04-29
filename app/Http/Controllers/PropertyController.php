@@ -40,4 +40,10 @@ class PropertyController extends Controller
 
         return response()->json($userProperty, 200);
     }
+
+    public function getUserProperties($userId) {
+        $properties = UserProperty::with(['propertyType:id,name'])->where("user_id", $userId)->get();
+
+        return response()->json($properties, 200);
+    }
 }

@@ -38,11 +38,11 @@ class PropertyValidator extends FormRequest
             'altitude'          => 'required|string|max:20',
             'rooms_qty'         => 'required|integer',
             'bathrooms_qty'     => 'required|integer',
-            'has_living_room'   => 'required|boolean',
-            'has_dinning_room'  => 'required|boolean',
-            'has_kitchen'       => 'required|boolean',
-            'has_garage'        => 'required|boolean',
-            'has_backyard'      => 'required|boolean',
+            'living_room_qty'   => 'required|integer',
+            'dinning_room_qty'  => 'required|integer',
+            'kitchen_qty'       => 'required|integer',
+            'garage_qty'        => 'required|integer',
+            'backyard_qty'      => 'required|integer',
             'floors_qty'        => 'required|integer',
             'property_type_id'  => 'required|integer|exists:properties_types,id'
         ]);

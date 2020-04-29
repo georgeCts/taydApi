@@ -29,6 +29,7 @@ Route::group(['middleware' => 'auth:api'], function() {
     Route::group(['prefix' => 'properties'], function () {
         Route::post('/', 'PropertyController@store');
         Route::get('/{id}', 'PropertyController@get');
+        Route::get('/user/{id}', 'PropertyController@getUserProperties');
     });
 
     Route::group(['prefix' => 'properties-types'], function () {
