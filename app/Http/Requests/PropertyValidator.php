@@ -31,24 +31,38 @@ class PropertyValidator extends FormRequest
     }
 
     public function store(Request $request) {
-        $validator = Validator::make($request->all(), [
+        $response   = true;
+        $validator  = Validator::make($request->all(), [
             'user_id'           => 'required|integer|exists:users,id',
+            'property_type_id'  => 'required|integer|exists:properties_types,id',
             'name'              => 'required|string|max:200',
             'latitude'          => 'required|string|max:20',
             'altitude'          => 'required|string|max:20',
-            'rooms_qty'         => 'required|integer',
-            'bathrooms_qty'     => 'required|integer',
-            'living_room_qty'   => 'required|integer',
-            'dinning_room_qty'  => 'required|integer',
-            'kitchen_qty'       => 'required|integer',
-            'garage_qty'        => 'required|integer',
-            'backyard_qty'      => 'required|integer',
-            'floors_qty'        => 'required|integer',
-            'property_type_id'  => 'required|integer|exists:properties_types,id'
+            'distribution'      => 'nullable|array'
         ]);
 
         if($validator->fails()) {
             return response()->json($validator->errors());
+        }
+
+        if(isset($request->distribution) && !is_null($request->distribution)){
+            $response = $this->propertyDistribution($request->distribution);
+        }
+
+        return $response;
+    }
+
+    private function propertyDistribution($data) {
+        for($i = 0; $i < count($data); $i++) {
+            $valor      = (array)$data[$i];
+            $detalle    = Validator::make($valor, [
+                'property_type_price_id'    => 'required|integer|exists:properties_types_prices,id',
+                'quantity'                  => 'required|integer',
+            ]);
+            
+            if ($detalle->fails()) {
+                return response()->json($detalle->errors());
+            }
         }
 
         return true;

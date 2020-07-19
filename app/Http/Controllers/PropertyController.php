@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Http\Requests\PropertyValidator;
 use App\UserProperty;
+use DB;
 
 class PropertyController extends Controller
 {
@@ -28,22 +29,77 @@ class PropertyController extends Controller
         }
 
         $userProperty = UserProperty::create($data);
+
+        if(isset($request->distribution) && !is_null($request->distribution)){
+            $this->propertyDistribution($request->distribution, $userProperty);
+        }
+
         return response()->json(['userProperty'=> $userProperty], 200);
     }
 
     public function get($id) {
-        $userProperty = UserProperty::find($id);
+        $userProperty = UserProperty::with(['propertyType:id,name'])->where("id", $id)->first();
         if(is_null($userProperty)){
             return response()->json( ['error'=> "No se encontro la propiedad con id ".$id], 403);
         }
-        $userProperty->propertyType;
+        
+        $response = array(
+            "id"                    => $userProperty->id,
+            "user_id"               => $userProperty->user_id,
+            "name"                  => $userProperty->name,
+            "latitude"              => $userProperty->latitude,
+            "altitude"              => $userProperty->altitude,
+            "is_predetermined"      => $userProperty->is_predetermined,
+            "property_type_id"      => $userProperty->property_type_id,
+            "property_type_name"    => $userProperty->propertyType->name,
+            "distribution"          => array()
+        );
 
-        return response()->json($userProperty, 200);
+        foreach($userProperty->userPropertyDistribution as $item) {
+            array_push($response['distribution'], array(
+                "user_property_distribution_id"     => $item->id,
+                "property_type_price_id"            => $item->property_type_price_id,
+                "quantity"                          => $item->quantity,
+                "key"                               => $item->propertyTypePrice->key,
+                "price"                             => $item->propertyTypePrice->price,
+            ));
+        }
+
+        return response()->json($response, 200);
     }
 
     public function getUserProperties($userId) {
         $properties = UserProperty::with(['propertyType:id,name'])->where("user_id", $userId)->get();
 
         return response()->json($properties, 200);
+    }
+
+    private function propertyDistribution(array $data, UserProperty $userProperty) {
+        $success = true;
+
+        try {
+            foreach($data as $value) {
+                if($value['id'] == 0) {
+                    DB::table('users_properties_distribution')->insert([
+                        'user_property_id'          => $userProperty->id,
+                        'property_type_price_id'    => $value['property_type_price_id'],
+                        'quantity'                  => $value['quantity'],
+                        'created_at'                => now(),
+                        'updated_at'                => now(),
+                    ]);
+                } else {
+                    DB::table('users_properties_distribution')
+                        ->where('id', $value['id'])
+                        ->update([
+                            'quantity'      => $value['quantity'],
+                            'updated_at'    => now()
+                        ]);
+                }
+            }
+        } catch (Exception $ex){
+            $success = false;
+        }
+
+        return $success;
     }
 }

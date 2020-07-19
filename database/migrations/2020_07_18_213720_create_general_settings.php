@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class CreatePropertiesTypesTable extends Migration
+class CreateGeneralSettings extends Migration
 {
     /**
      * Run the migrations.
@@ -13,11 +13,14 @@ class CreatePropertiesTypesTable extends Migration
      */
     public function up()
     {
-        Schema::create('properties_types', function (Blueprint $table) {
+        Schema::create('general_settings', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->string('name');
+            $table->string('key');
+            $table->text('description')->nullable();
+            $table->string('value');
             $table->timestamps();
-            $table->boolean('active')->default(true);
+            $table->boolean('active')->default(1);
+
         });
     }
 
@@ -28,6 +31,6 @@ class CreatePropertiesTypesTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('properties_types');
+        Schema::dropIfExists('general_settings');
     }
 }
