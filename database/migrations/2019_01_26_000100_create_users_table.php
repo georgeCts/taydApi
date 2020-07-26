@@ -19,9 +19,9 @@ class CreateUsersTable extends Migration
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             $table->rememberToken();
-            $table->boolean('first_login')->default(0);
+            $table->boolean('first_login')->default(1);
             $table->boolean('confirmed')->default(0);
-            $table->boolean('isTayder');
+            $table->boolean('isTayder')->default(0);
             $table->timestamps();
         });
     }

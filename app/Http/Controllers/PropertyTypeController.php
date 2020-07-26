@@ -8,8 +8,34 @@ use App\PropertyType;
 class PropertyTypeController extends Controller
 {
     public function getAll() {
-        $result = PropertyType::where('active', true)->get();
+        $response = array();
+        $arrPropertiesTypes = PropertyType::where('active', true)->get();
 
-        return response()->json(['propertyTypes'=> $result], 200);
+        if(is_null($arrPropertiesTypes)){
+            return response()->json( ['error'=> "No se encontraron tipos de inmuebles habilitados."], 403);
+        }
+
+        foreach($arrPropertiesTypes as $propertyType) {
+            $type = array(
+                "id"                    => $propertyType->id,
+                "name"                  => $propertyType->name,
+                "active"                => $propertyType->active,
+                "prices"                => array()
+            );
+
+            foreach($propertyType->propertyTypePrice as $price) {
+                array_push($type['prices'], array(
+                    "id"                    => $price->id,
+                    "property_type_id"      => $price->property_type_id,
+                    "key"                   => $price->key,
+                    "price"                 => $price->price,
+                ));
+            }
+
+            array_push($response, $type);
+        }
+
+
+        return response()->json(['propertyTypes' => $response], 200);
     }
 }
