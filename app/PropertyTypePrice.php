@@ -12,6 +12,7 @@ class PropertyTypePrice extends Model
     protected $fillable =  [
         'property_type_id',
         'key',
+        'name',
         'price'
     ];
 

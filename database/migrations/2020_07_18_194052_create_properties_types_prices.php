@@ -17,6 +17,7 @@ class CreatePropertiesTypesPrices extends Migration
             $table->bigIncrements('id');
             $table->unsignedBigInteger('property_type_id');
             $table->string('key');
+            $table->string('name');
             $table->decimal('price', 6, 2);
             $table->timestamps();
             $table->boolean('active')->default(1);

@@ -28,6 +28,7 @@ class PropertyTypeController extends Controller
                     "id"                    => $price->id,
                     "property_type_id"      => $price->property_type_id,
                     "key"                   => $price->key,
+                    "name"                  => $price->name,
                     "price"                 => $price->price,
                 ));
             }
