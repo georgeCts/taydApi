@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Http\Requests\PropertyValidator;
 use App\UserProperty;
+use App\User;
 use DB;
 
 class PropertyController extends Controller
@@ -32,6 +33,14 @@ class PropertyController extends Controller
 
         if(isset($request->distribution) && !is_null($request->distribution)){
             $this->propertyDistribution($request->distribution, $userProperty);
+        }
+
+        if(isset($request->first_login) && !is_null($request->first_login)) {
+            $user               = User::find($request->user_id);
+            $user->first_login  = true;
+            $user->save();
+
+            return response()->json(['user'=> $user], 200);
         }
 
         return response()->json(['userProperty'=> $userProperty], 200);
