@@ -6,9 +6,11 @@ use Illuminate\Http\Request;
 use App\Http\Requests\UserValidator;
 use App\User;
 use App\UserInfo;
+use App\UserStripeCustomer;
 use Carbon\Carbon;
 use Exception;
 use Auth;
+use Stripe;
 
 class AuthController extends Controller
 {
@@ -67,6 +69,21 @@ class AuthController extends Controller
             $info->phone        = $request->phone;
             $info->photo        = "/storage/photos/default.jpg";
             $info->save();
+        }
+
+        \Stripe\Stripe::setApiKey(env('STRIPE_SECRET'));
+        $customer   = \Stripe\Customer::create([
+            'description'   => 'Customer Tayd App',
+            'email'         => $user->email,
+            'phone'         => $request->phone,
+            'name'          => $request->name . " " . $request->last_name,
+        ]);
+
+        if(!is_null($customer)) {
+            $objCustomer                        = new UserStripeCustomer();
+            $objCustomer->user_id               = $user->id;
+            $objCustomer->stripe_customer_token = $customer->id;
+            $objCustomer->save();
         }
 
         return response()->json(['user'=> $user], 200);

@@ -9,6 +9,7 @@ use Laravel\Passport\HasApiTokens;
 use App\UserInfo;
 use App\UserDocument;
 use App\UserProperty;
+use App\UserStripeCustomer;
 
 class User extends Authenticatable
 {
@@ -51,6 +52,10 @@ class User extends Authenticatable
 
     public function properties() {
         return $this->hasMany(UserProperty::class);
+    }
+
+    public function stripeCustomer() {
+        return $this->hasOne(UserStripeCustomer::class);
     }
 
 }

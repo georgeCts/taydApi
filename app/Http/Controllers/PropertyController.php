@@ -83,6 +83,23 @@ class PropertyController extends Controller
         return response()->json($properties, 200);
     }
 
+    public function setPredetermined($id) {
+        $userProperty = UserProperty::find($id);
+        if(is_null($userProperty)){
+            return response()->json( ['error'=> "No se encontro la propiedad con id ".$id], 403);
+        }
+
+        $userProperty->is_predetermined = true;
+        $userProperty->save();
+
+        DB::table('users_properties')
+                        ->where('id', '!=', $id)
+                        ->where('user_id', $userProperty->user_id)
+                        ->update(['is_predetermined' => false]);
+
+        return response()->json(['message' => 'Operación exitosa.'], 200);
+    }
+
     private function propertyDistribution(array $data, UserProperty $userProperty) {
         $success = true;
 
