@@ -3,6 +3,7 @@
 namespace App;
 
 use Illuminate\Database\Eloquent\Model;
+use App\StripeCustomerSource;
 use App\User;
 
 class UserStripeCustomer extends Model
@@ -17,5 +18,9 @@ class UserStripeCustomer extends Model
 
     public function user() {
         return $this->belongsTo(User::class);
+    }
+
+    public function customerSources() {
+        return $this->hasMany(StripeCustomerSource::class);
     }
 }

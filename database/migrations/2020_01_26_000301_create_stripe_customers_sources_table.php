@@ -17,6 +17,7 @@ class CreateStripeCustomersSourcesTable extends Migration
             $table->bigIncrements('id');
             $table->unsignedBigInteger('user_stripe_customer_id');
             $table->string('stripe_customer_source_token');
+            $table->boolean('is_predetermined')->default(0);
             $table->timestamps();
 
             $table->foreign('user_stripe_customer_id')->references('id')->on('users_stripe_customers');
