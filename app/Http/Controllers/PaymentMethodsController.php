@@ -69,6 +69,35 @@ class PaymentMethodsController extends Controller
         return response()->json($objSource, 200);
     }
 
+    public function getPredetermined($id) {
+        $customer   = UserStripeCustomer::where('user_id', $id)->first();
+        
+        if(is_null($customer)){
+            return response()->json(['error'=> "No existe un token asignado a este usuario."], 403);
+        }
+        
+        $source = StripeCustomerSource::where('user_stripe_customer_id', $customer->id)
+                    ->where('is_predetermined', true)
+                    ->first();
+        \Stripe\Stripe::setApiKey(env('STRIPE_SECRET'));
+
+        $result     = \Stripe\Customer::retrieveSource($customer->stripe_customer_token, $source->stripe_customer_source_token, []);
+        $response   = array(
+            "id"                => $source->id,
+            "key"               => $result->id,
+            "brand"             => $result->brand,
+            "name"              => $result->name,
+            "exp_month"         => $result->exp_month,
+            "exp_year"          => $result->exp_year,
+            "number"            => "XXXX XXXX XXXX " . $result->last4,
+            "country"           => $result->country,
+            "is_predetermined"  => $source->is_predetermined
+        );
+
+        return response()->json($response, 200);
+
+    }
+
     public function setPredetermined($id) {
         $source = StripeCustomerSource::find($id);
         if(is_null($source)){

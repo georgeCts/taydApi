@@ -31,6 +31,7 @@ Route::group(['middleware' => 'auth:api'], function() {
         Route::get('/{id}', 'PropertyController@get');
         Route::get('/user/{id}', 'PropertyController@getUserProperties');
         Route::get('/predetermined/{id}', 'PropertyController@setPredetermined');
+        Route::get('/user-predetermined/{id}', 'PropertyController@getPredetermined');
     });
 
     Route::group(['prefix' => 'properties-types'], function() {
@@ -43,6 +44,7 @@ Route::group(['middleware' => 'auth:api'], function() {
         Route::post('/', 'PaymentMethodsController@store');
         Route::get('/user-cards/{id}', 'PaymentMethodsController@listCards');
         Route::get('/predetermined/{id}', 'PaymentMethodsController@setPredetermined');
+        Route::get('/user-predetermined/{id}', 'PaymentMethodsController@getPredetermined');
     });
 
     Route::group(['prefix' => 'services'], function() {

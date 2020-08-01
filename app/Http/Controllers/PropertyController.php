@@ -83,6 +83,39 @@ class PropertyController extends Controller
         return response()->json($properties, 200);
     }
 
+    public function getPredetermined($userId) {
+        $userProperty = UserProperty::with(['propertyType:id,name'])
+                            ->where("user_id", $userId)
+                            ->where("is_predetermined", true)->first();
+        if(is_null($userProperty)){
+            return response()->json( ['error'=> "No se encontró una propiedad predeterminada."], 403);
+        }
+        
+        $response = array(
+            "id"                    => $userProperty->id,
+            "user_id"               => $userProperty->user_id,
+            "name"                  => $userProperty->name,
+            "latitude"              => $userProperty->latitude,
+            "altitude"              => $userProperty->altitude,
+            "is_predetermined"      => $userProperty->is_predetermined,
+            "property_type_id"      => $userProperty->property_type_id,
+            "property_type_name"    => $userProperty->propertyType->name,
+            "distribution"          => array()
+        );
+
+        foreach($userProperty->userPropertyDistribution as $item) {
+            array_push($response['distribution'], array(
+                "user_property_distribution_id"     => $item->id,
+                "property_type_price_id"            => $item->property_type_price_id,
+                "quantity"                          => $item->quantity,
+                "key"                               => $item->propertyTypePrice->key,
+                "price"                             => $item->propertyTypePrice->price,
+            ));
+        }
+
+        return response()->json($response, 200);
+    }
+
     public function setPredetermined($id) {
         $userProperty = UserProperty::find($id);
         if(is_null($userProperty)){
