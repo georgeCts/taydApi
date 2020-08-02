@@ -48,10 +48,11 @@ class PropertyController extends Controller
 
     public function get($id) {
         $userProperty = UserProperty::with(['propertyType:id,name'])->where("id", $id)->first();
+
         if(is_null($userProperty)){
             return response()->json( ['error'=> "No se encontro la propiedad con id ".$id], 403);
         }
-        
+
         $response = array(
             "id"                    => $userProperty->id,
             "user_id"               => $userProperty->user_id,
@@ -70,6 +71,7 @@ class PropertyController extends Controller
                 "property_type_price_id"            => $item->property_type_price_id,
                 "quantity"                          => $item->quantity,
                 "key"                               => $item->propertyTypePrice->key,
+                "name"                              => $item->propertyTypePrice->name,
                 "price"                             => $item->propertyTypePrice->price,
             ));
         }
@@ -109,6 +111,7 @@ class PropertyController extends Controller
                 "property_type_price_id"            => $item->property_type_price_id,
                 "quantity"                          => $item->quantity,
                 "key"                               => $item->propertyTypePrice->key,
+                "name"                              => $item->propertyTypePrice->name,
                 "price"                             => $item->propertyTypePrice->price,
             ));
         }

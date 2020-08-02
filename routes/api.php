@@ -40,6 +40,10 @@ Route::group(['middleware' => 'auth:api'], function() {
         //Route::get('/{id}', 'PropertyController@get');
     });
 
+    Route::group(['prefix' => 'general-settings'], function() {
+        Route::get('/list', 'GeneralSettingsController@listAll');
+    });
+
     Route::group(['prefix' => 'payment-methods'], function() {
         Route::post('/', 'PaymentMethodsController@store');
         Route::get('/user-cards/{id}', 'PaymentMethodsController@listCards');

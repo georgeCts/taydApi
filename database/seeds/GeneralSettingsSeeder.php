@@ -37,6 +37,16 @@ class GeneralSettingsSeeder extends Seeder
                 'description'   => 'Precio por servicio ofrecido a un inmueble tipo departamento.',
                 'value'         => '150'
             ],
+            [
+                'key'           => 'IVA_PORCENTAJE',
+                'description'   => 'Porcentaje correspondiente al impuesto.',
+                'value'         => '16'
+            ],
+            [
+                'key'           => 'SERVICIO_INSUMOS_EXTRA',
+                'description'   => 'Precio por el consumo de los insumos extra solicitado por el cliente.',
+                'value'         => '50'
+            ],
         );
 
         foreach ($items as $item) {
