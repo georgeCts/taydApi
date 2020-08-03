@@ -5,6 +5,7 @@ namespace App;
 use Illuminate\Database\Eloquent\Model;
 use App\User;
 use App\UserProperty;
+use App\ServiceStatus;
 
 class Service extends Model
 {
@@ -14,13 +15,10 @@ class Service extends Model
         'provider_user_id',
         'user_property_id',
         'stripe_customer_source_id',
-        'is_accepted',
+        'service_status_id',
         'dt_start',
         'dt_finish',
         'has_consumables',
-        'cost',
-        'is_canceled',
-        'dt_canceled'
     ];
 
     public function requester() {
@@ -33,5 +31,9 @@ class Service extends Model
 
     public function property() {
         return $this->hasOne(UserProperty::class, 'id', 'user_property_id');
+    }
+
+    public function serviceStatus() {
+        return $this->hasOne(ServiceStatus::class, 'id', 'service_status_id');
     }
 }

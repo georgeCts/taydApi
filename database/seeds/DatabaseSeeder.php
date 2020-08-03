@@ -17,6 +17,7 @@ class DatabaseSeeder extends Seeder
             PropertyTypeTableSeeder::class,
             PropertyTypePricesSeeder::class,
             GeneralSettingsSeeder::class,
+            ServiceStatusSeeder::class,
         ]);
     }
 }

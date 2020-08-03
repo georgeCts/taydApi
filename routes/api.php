@@ -54,6 +54,7 @@ Route::group(['middleware' => 'auth:api'], function() {
     Route::group(['prefix' => 'services'], function() {
         Route::post('/', 'ServiceController@store');
         Route::get('/{id}', 'ServiceController@get');
+        Route::get('/list-scheduled/{id}', 'ServiceController@listScheduled');
         Route::delete('/cancel/{id}', 'ServiceController@cancel');
     });
 });

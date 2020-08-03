@@ -37,7 +37,7 @@ class PropertyController extends Controller
 
         if(isset($request->first_login) && !is_null($request->first_login)) {
             $user               = User::find($request->user_id);
-            $user->first_login  = true;
+            $user->first_login  = false;
             $user->save();
 
             return response()->json(['user'=> $user], 200);

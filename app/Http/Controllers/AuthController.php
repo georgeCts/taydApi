@@ -58,6 +58,7 @@ class AuthController extends Controller
         $user->email        = $request->email;
         $user->password     = bcrypt($request->password);
         $user->confirmed    = false;
+        $user->first_login  = true;
         $user->isTayder     = $request->isTayder;
         $user->save();
 

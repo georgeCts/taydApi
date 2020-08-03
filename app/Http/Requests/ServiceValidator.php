@@ -32,12 +32,14 @@ class ServiceValidator extends FormRequest
 
     public function store(Request $request) {
         $validator = Validator::make($request->all(), [
-            'request_user_id'       => 'required|integer|exists:users,id',
-            'provider_user_id'      => 'required|integer|exists:users,id',
+            'user_id'               => 'required|integer|exists:users,id',
             'user_property_id'      => 'required|integer|exists:users_properties,id',
-            'is_accepted'           => 'required|boolean',
-            'dt_start'              => 'required|date_format:Y-m-d H:i:s',
-            'has_consumables'       => 'required|boolean'
+            'stripe_customer_source_id' => 'required|integer|exists:stripe_customers_sources,id',
+            'date'                  => 'required|date_format:Y-m-d',
+            'time'                  => 'required|date_format:H:i:s',
+            'has_consumables'       => 'required|boolean',
+            'service_cost'          => 'required|regex:/^\d+(\.\d{1,2})?$/',
+            'discount'              => 'nullable|integer'
         ]);
 
         if($validator->fails()) {
