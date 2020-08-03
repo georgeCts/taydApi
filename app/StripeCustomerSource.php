@@ -4,6 +4,7 @@ namespace App;
 
 use Illuminate\Database\Eloquent\Model;
 use App\UserStripeCustomer;
+use App\Service;
 
 class StripeCustomerSource extends Model
 {
@@ -18,5 +19,9 @@ class StripeCustomerSource extends Model
 
     public function userStripeCustomer() {
         return $this->belongsTo(UserStripeCustomer::class);
+    }
+
+    public function services() {
+        return $this->hasMany(Service::class);
     }
 }

@@ -4,8 +4,10 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Http\Requests\ServiceValidator;
+use Carbon\Carbon;
 use App\Service;
 use App\GeneralSetting;
+use Stripe;
 
 class ServiceController extends Controller
 {
@@ -96,11 +98,80 @@ class ServiceController extends Controller
     }
 
     public function listScheduled($userId) {
+        $response = array();
         $services = Service::where('request_user_id', $userId)
                         ->whereIn('service_status_id', [1, 2, 3])
                         ->get();
 
-        return response()->json($services, 200);
+        foreach($services as $service) {
+            array_push($response, array(
+                "id"                    => $service->id,
+                "request_user_id"       => $service->request_user_id,
+                "request_user_name"     => $service->requester->info->name. " ".$service->requester->info->last_name,
+                "provider_user_id"      => $service->request_user_id,
+                "provider_user_name"    => is_null($service->provider_user_name) ? "" : $service->provider->info->name. " ".$service->provider->info->last_name,
+                "stripe_customer_source_id" => $service->stripe_customer_source_id,
+                "service_status_id"     => $service->service_status_id,
+                "service_status_name"   => $service->serviceStatus->name,
+                "dt_request"            => $service->dt_request,
+                "dt_start"              => $service->dt_start,
+                "dt_finish"             => $service->dt_finish,
+                "dt_canceled"           => $service->dt_canceled,
+                "has_consumables"       => $service->has_consumables,
+                "service_cost"          => $service->service_cost,
+                "tax_service"           => $service->tax_service,
+                "tayd_commission"       => $service->tayd_commission,
+                "stripe_commission"     => $service->stripe_commission,
+                "tax_stripe"            => $service->tax_stripe,
+                "discount"              => $service->discount,
+                "total"                 => $service->total,
+                "created_at"            => Carbon::parse($service->created_at)->format("Y-m-d H:i:s")
+            ));
+        }
+
+        return response()->json($response, 200);
+    }
+
+    public function listHistory($userId) {
+        $response = array();
+        $services = Service::where('request_user_id', $userId)
+                        ->whereIn('service_status_id', [4, 5])
+                        ->get();
+
+        \Stripe\Stripe::setApiKey(env('STRIPE_SECRET'));
+
+        foreach($services as $service) {
+            $source     = \Stripe\Customer::retrieveSource($service->requester->stripeCustomer->stripe_customer_token, $service->stripeSource->stripe_customer_source_token, []);
+
+            array_push($response, array(
+                "id"                    => $service->id,
+                "request_user_id"       => $service->request_user_id,
+                "request_user_name"     => $service->requester->info->name. " ".$service->requester->info->last_name,
+                "provider_user_id"      => $service->request_user_id,
+                "provider_user_name"    => is_null($service->provider_user_name) ? "" : $service->provider->info->name. " ".$service->provider->info->last_name,
+                "stripe_customer_source_id" => $service->stripe_customer_source_id,
+                "stripe_source_brand"   => $source->brand,
+                "stripe_source_number"  => "XXXX XXXX XXXX ".$source->last4,
+                "stripe_source_name"    => $source->name,
+                "service_status_id"     => $service->service_status_id,
+                "service_status_name"   => $service->serviceStatus->name,
+                "dt_request"            => $service->dt_request,
+                "dt_start"              => $service->dt_start,
+                "dt_finish"             => $service->dt_finish,
+                "dt_canceled"           => $service->dt_canceled,
+                "has_consumables"       => $service->has_consumables,
+                "service_cost"          => $service->service_cost,
+                "tax_service"           => $service->tax_service,
+                "tayd_commission"       => $service->tayd_commission,
+                "stripe_commission"     => $service->stripe_commission,
+                "tax_stripe"            => $service->tax_stripe,
+                "discount"              => $service->discount,
+                "total"                 => $service->total,
+                "created_at"            => Carbon::parse($service->created_at)->format("Y-m-d H:i:s")
+            ));
+        }
+
+        return response()->json($response, 200);
     }
 
     public function cancel($id) {

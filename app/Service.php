@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use App\User;
 use App\UserProperty;
 use App\ServiceStatus;
+use App\StripeCustomerSource;
 
 class Service extends Model
 {
@@ -35,5 +36,9 @@ class Service extends Model
 
     public function serviceStatus() {
         return $this->hasOne(ServiceStatus::class, 'id', 'service_status_id');
+    }
+
+    public function stripeSource() {
+        return $this->hasOne(StripeCustomerSource::class, 'id', 'stripe_customer_source_id');
     }
 }
