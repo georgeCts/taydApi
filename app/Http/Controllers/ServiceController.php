@@ -140,8 +140,21 @@ class ServiceController extends Controller
 
         \Stripe\Stripe::setApiKey(env('STRIPE_SECRET'));
 
-        foreach($services as $service) {
-            $source     = \Stripe\Customer::retrieveSource($service->requester->stripeCustomer->stripe_customer_token, $service->stripeSource->stripe_customer_source_token, []);
+        for($i = 0; $i < sizeof($services); $i++) {
+            $service            = $services[$i];
+            $arrDistribution    = array();
+            $source             = \Stripe\Customer::retrieveSource($service->requester->stripeCustomer->stripe_customer_token, $service->stripeSource->stripe_customer_source_token, []);
+
+            foreach($service->property->userPropertyDistribution as $distribution) {
+                array_push($arrDistribution, array(
+                    "user_property_distribution_id"     => $distribution->id,
+                    "property_type_price_id"            => $distribution->property_type_price_id,
+                    "quantity"                          => $distribution->quantity,
+                    "key"                               => $distribution->propertyTypePrice->key,
+                    "name"                              => $distribution->propertyTypePrice->name,
+                    "price"                             => $distribution->propertyTypePrice->price,
+                ));
+            }
 
             array_push($response, array(
                 "id"                    => $service->id,
@@ -149,6 +162,10 @@ class ServiceController extends Controller
                 "request_user_name"     => $service->requester->info->name. " ".$service->requester->info->last_name,
                 "provider_user_id"      => $service->request_user_id,
                 "provider_user_name"    => is_null($service->provider_user_name) ? "" : $service->provider->info->name. " ".$service->provider->info->last_name,
+                "property_name"         => $service->property->name,
+                "property_type_id"      => $service->property->propertyType->id,
+                "property_type_name"    => $service->property->propertyType->name,
+                "distribution"          => $arrDistribution,
                 "stripe_customer_source_id" => $service->stripe_customer_source_id,
                 "stripe_source_brand"   => $source->brand,
                 "stripe_source_number"  => "XXXX XXXX XXXX ".$source->last4,
