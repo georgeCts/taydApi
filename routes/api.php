@@ -42,6 +42,7 @@ Route::group(['middleware' => 'auth:api'], function() {
 
     Route::group(['prefix' => 'general-settings'], function() {
         Route::get('/list', 'GeneralSettingsController@listAll');
+        Route::get('/key/{key}', 'GeneralSettingsController@getByKey');
     });
 
     Route::group(['prefix' => 'payment-methods'], function() {
