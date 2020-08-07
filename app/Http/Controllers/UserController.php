@@ -46,9 +46,10 @@ class UserController extends Controller
         $query->join('coupons', 'uc.coupon_id', '=', 'coupons.id')
               ->select('coupons.*', 'uc.id as user_coupon_id');
 
-        $coupons = $query->where('uc.id', $id)
+        $coupons = $query->where('uc.user_id', $id)
                         ->where('uc.active', true)
                         ->where('coupons.end', '>=', Carbon::now()->format('Y-m-d'))
+                        ->orderBy('uc.coupon_id', 'DESC')
                         ->get();
 
         return response()->json($coupons, 200);
