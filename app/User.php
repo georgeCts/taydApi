@@ -10,6 +10,7 @@ use App\UserInfo;
 use App\UserDocument;
 use App\UserProperty;
 use App\UserStripeCustomer;
+use App\UserCoupon;
 
 class User extends Authenticatable
 {
@@ -52,6 +53,10 @@ class User extends Authenticatable
 
     public function properties() {
         return $this->hasMany(UserProperty::class);
+    }
+
+    public function coupons() {
+        return $this->hasMany(UserCoupon::class);
     }
 
     public function stripeCustomer() {

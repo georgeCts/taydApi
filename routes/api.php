@@ -21,9 +21,11 @@ Route::group(['prefix' => 'auth'], function () {
 Route::group(['middleware' => 'auth:api'], function() {
     Route::group(['prefix' => 'users'], function() {
         Route::get('/{id}', 'UserController@get');
-        //Route::post('/', 'UserController@store');
         Route::post('/upload_document', 'UserController@uploadDocument');
         //Route::put('/', 'UserController@update');
+
+        Route::get('/{id}/coupons', 'UserController@getCoupons');
+        Route::post('/{id}/coupons', 'UserController@setCoupons');
     });
 
     Route::group(['prefix' => 'properties'], function() {
@@ -58,5 +60,12 @@ Route::group(['middleware' => 'auth:api'], function() {
         Route::get('/list-scheduled/{id}', 'ServiceController@listScheduled');
         Route::get('/list-history/{id}', 'ServiceController@listHistory');
         Route::delete('/cancel/{id}', 'ServiceController@cancel');
+    });
+
+    Route::group(['prefix' => 'coupons'], function() {
+        Route::post('/', 'CouponController@store');
+        Route::put('/', 'CouponController@store');
+        Route::get('/{id}', 'CouponController@get');
+        Route::delete('/cancel/{id}', 'CouponController@cancel');
     });
 });
