@@ -82,7 +82,7 @@ class UserController extends Controller
             return response()->json(['error'=> "Hubo un problema al intentar registrar el cupón, vuelve a intentarlo."], 403);
         }
 
-        return response()->json($objUserCoupon, 200);
+        return response()->json($coupon, 200);
     }
 
     /**
