@@ -54,37 +54,41 @@ class AuthController extends Controller
             return response()->json(['error'=> $validacion->original], 403);
         }
 
-        $user               = new User();
-        $user->email        = $request->email;
-        $user->password     = bcrypt($request->password);
-        $user->confirmed    = false;
-        $user->first_login  = true;
-        $user->isTayder     = $request->isTayder;
-        $user->save();
-
-        if($user != null) {
-            $info               = new UserInfo();
-            $info->user_id      = $user->id;
-            $info->name         = $request->name;
-            $info->last_name    = $request->last_name;
-            $info->phone        = $request->phone;
-            $info->photo        = "/storage/photos/default.jpg";
-            $info->save();
-        }
-
-        \Stripe\Stripe::setApiKey(env('STRIPE_SECRET'));
-        $customer   = \Stripe\Customer::create([
-            'description'   => 'Customer Tayd App',
-            'email'         => $user->email,
-            'phone'         => $request->phone,
-            'name'          => $request->name . " " . $request->last_name,
-        ]);
-
-        if(!is_null($customer)) {
-            $objCustomer                        = new UserStripeCustomer();
-            $objCustomer->user_id               = $user->id;
-            $objCustomer->stripe_customer_token = $customer->id;
-            $objCustomer->save();
+        try {
+            $user               = new User();
+            $user->email        = $request->email;
+            $user->password     = bcrypt($request->password);
+            $user->confirmed    = false;
+            $user->first_login  = true;
+            $user->isTayder     = $request->isTayder;
+            $user->save();
+    
+            if($user != null) {
+                $info               = new UserInfo();
+                $info->user_id      = $user->id;
+                $info->name         = $request->name;
+                $info->last_name    = $request->last_name;
+                $info->phone        = $request->phone;
+                $info->photo        = "/storage/photos/default.jpg";
+                $info->save();
+            }
+    
+            \Stripe\Stripe::setApiKey(env('STRIPE_SECRET'));
+            $customer   = \Stripe\Customer::create([
+                'description'   => 'Customer Tayd App',
+                'email'         => $user->email,
+                'phone'         => $request->phone,
+                'name'          => $request->name . " " . $request->last_name,
+            ]);
+    
+            if(!is_null($customer)) {
+                $objCustomer                        = new UserStripeCustomer();
+                $objCustomer->user_id               = $user->id;
+                $objCustomer->stripe_customer_token = $customer->id;
+                $objCustomer->save();
+            }
+        } catch(Exception $e) {
+            return response()->json(['error'=> $e], 403);
         }
 
         return response()->json(['user'=> $user], 200);
