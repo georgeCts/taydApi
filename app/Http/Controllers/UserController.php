@@ -91,7 +91,7 @@ class UserController extends Controller
      */
     public function uploadDocument(Request $request) {
         $validacion = $this->validaciones->uploadDocument($request);
-        
+
         if( $validacion  !== true){
             return response()->json(['error'=> $validacion->original], 403);
         }
@@ -105,6 +105,12 @@ class UserController extends Controller
             $document->file_name    = $response->nombre;
             $document->file_url     = $response->url;
             $document->save();
+
+            if($request->name == "FOTO_PERFIL") {
+                $objUser = User::where('id', $request->user_id)->first();
+                $objUser->on_review = true;
+                $objUser->save();
+            }
         } else {
             return response()->json(['error'=> 'No se pudo almacenar el archivo enviado.'], 403);
         }

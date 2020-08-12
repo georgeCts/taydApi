@@ -50,7 +50,7 @@ class UserValidator extends FormRequest
         $validator = Validator::make($request->all(), [
             'user_id'   => 'required|integer|exists:users,id',
             'name'      => 'required|string',
-            'file'      => 'required|file|mimes:jpeg,jpg,png'
+            /* 'file'      => 'required|file|mimes:jpeg,jpg,png' */
         ]);
         
         if ($validator->fails()) {

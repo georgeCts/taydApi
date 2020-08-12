@@ -20,8 +20,10 @@ class CreateUsersTable extends Migration
             $table->string('password');
             $table->rememberToken();
             $table->boolean('first_login')->default(1);
+            $table->boolean('first_login_tayder')->default(1);
             $table->boolean('confirmed')->default(0);
             $table->boolean('isTayder')->default(0);
+            $table->boolean('on_review')->default(0);
             $table->timestamps();
         });
     }

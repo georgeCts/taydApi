@@ -29,7 +29,9 @@ class FileService
             if($request->hasFile('file')){
                 $archivo = $request->file;
                 $response = $this->upload($request, $folder, $path, $type);
-            }else{
+            } elseif($request->isBase64) {
+                $response = $this->createImage($request, $folder, $path, $type);
+            } else{
                 $response['message'] = 'No es un archivo';
                 $response['codigo'] = 403;
             }
@@ -50,12 +52,12 @@ class FileService
 
     private function upload($request, $destiny, $path, $type){
         $response = array(
-            "nombre" => "",
+            "nombre"    => "",
             "extension" => "",
-            "url" => "",
-            "success" => false,
-            "codigo" => 403,
-            "message" => ""
+            "url"       => "",
+            "success"   => false,
+            "codigo"    => 403,
+            "message"   => ""
         );
         
         /* if(!is_null($request->documento_id) && $request->documento_id != 0){
@@ -92,6 +94,41 @@ class FileService
             }
         }
         catch(Exception $ex){
+            $response["message"] = $ex;
+        }
+        
+        return $response;
+    }
+
+    private function createImage($request, $destiny, $path, $type) {
+        $response = array(
+            "nombre"    => "",
+            "extension" => "",
+            "url"       => "",
+            "success"   => false,
+            "codigo"    => 403,
+            "message"   => ""
+        );
+
+        $file_parts     = explode(";base64,", $request->document);
+        $file_type_aux  = explode("image/", $file_parts[0]);
+        $file_type      = $file_type_aux[1];
+        $file_base64    = base64_decode($file_parts[1]);
+
+        $fileName       = time().'_document.'.$file_type;
+        $url            = '/'.$type.'/' .$destiny.'/'.$fileName;
+
+        try {
+            \File::put(storage_path().$url, $file_base64);
+
+            $response = array(
+                "nombre"    => $fileName,
+                "extension" => "jpg",
+                "url"       => $url,
+                "success"   => true,
+                "codigo"    => 200
+            );
+        } catch(Exception $ex) {
             $response["message"] = $ex;
         }
         
