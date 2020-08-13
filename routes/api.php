@@ -24,6 +24,8 @@ Route::group(['middleware' => 'auth:api'], function() {
         Route::post('/upload_document', 'UserController@uploadDocument');
         //Route::put('/', 'UserController@update');
 
+        Route::get('/first-login-tayder/{id}', 'UserController@updateFirstLoginTayder');
+
         Route::get('/{id}/coupons', 'UserController@getCoupons');
         Route::post('/{id}/coupons', 'UserController@setCoupons');
     });

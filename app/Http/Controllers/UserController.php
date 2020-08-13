@@ -38,6 +38,25 @@ class UserController extends Controller
         return response()->json($user, 200);
     }
 
+    public function updateFirstLoginTayder($id) {
+        $user = User::find($id);
+
+        if(is_null($user)) {
+            return response()->json( ['error'=> "No se encontro el usuario con id ".$id], 403);
+        }
+
+        try {
+            $user->first_login_tayder = false;
+            $user->save();
+    
+            $user->info;
+        } catch(Exception $e) {
+            return response()->json(['error'=> "No se pudo realizar la actualización de primer inicio de sesión"], 403);
+        }
+
+        return response()->json($user, 200);
+    }
+
     /**
      * USER COUPONS
      */
