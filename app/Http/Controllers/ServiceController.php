@@ -8,6 +8,7 @@ use Carbon\Carbon;
 use App\Service;
 use App\GeneralSetting;
 use Stripe;
+use DB;
 
 class ServiceController extends Controller
 {
@@ -95,6 +96,29 @@ class ServiceController extends Controller
         $service->property->propertyType;
 
         return response()->json($service, 200);
+    }
+
+    public function getEarnings($userId) {
+        date_default_timezone_set("America/Mexico_City");
+
+        $monday = date('Y-m-d', strtotime('monday this week') );
+        $sunday = date('Y-m-d', strtotime('sunday this week') );
+
+        $subtotal = DB::table('services')
+                        ->where('service_status_id', 4)
+                        ->where('provider_user_id', $userId)
+                        ->where('dt_finish', '>=', $monday)
+                        ->where('dt_finish', '<=', $sunday)
+                        ->sum('service_cost');
+
+        $services_count = DB::table('services')
+                            ->where('service_status_id', 4)
+                            ->where('provider_user_id', $userId)
+                            ->where('dt_finish', '>=', $monday)
+                            ->where('dt_finish', '<=', $sunday)
+                            ->count();
+
+        return response()->json(["subtotal" => $subtotal, "count" => $services_count], 200);
     }
 
     public function listScheduled($userId) {
@@ -189,6 +213,15 @@ class ServiceController extends Controller
         }
 
         return response()->json($response, 200);
+    }
+
+    public function listTayderHistory($userId) {
+        $services = Service::where('provider_user_id', $userId)
+                        ->whereIn('service_status_id', [4, 5])
+                        ->orderBy('id', 'DESC')
+                        ->get();
+
+        return response()->json($services, 200);
     }
 
     public function cancel($id) {

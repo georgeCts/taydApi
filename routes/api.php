@@ -61,6 +61,8 @@ Route::group(['middleware' => 'auth:api'], function() {
         Route::get('/{id}', 'ServiceController@get');
         Route::get('/list-scheduled/{id}', 'ServiceController@listScheduled');
         Route::get('/list-history/{id}', 'ServiceController@listHistory');
+        Route::get('/list-tayder-history/{id}', 'ServiceController@listTayderHistory');
+        Route::get('/earnings/{id}', 'ServiceController@getEarnings');
         Route::delete('/cancel/{id}', 'ServiceController@cancel');
     });
 
