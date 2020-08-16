@@ -32,6 +32,7 @@ class CreateServicesTable extends Migration
             $table->decimal('tax_stripe', 6, 2);
             $table->decimal('discount', 6, 2)->nullable();
             $table->decimal('total', 6, 2)->nullable();
+            $table->string('charge_token')->nullable();
             $table->timestamps();
 
             $table->foreign('request_user_id')->references('id')->on('users');

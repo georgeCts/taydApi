@@ -20,6 +20,7 @@ class Service extends Model
         'dt_start',
         'dt_finish',
         'has_consumables',
+        'charge_token',
     ];
 
     public function requester() {

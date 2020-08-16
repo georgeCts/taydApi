@@ -7,12 +7,14 @@ use App\Http\Requests\ServiceValidator;
 use Carbon\Carbon;
 use App\Service;
 use App\GeneralSetting;
-use Stripe;
+use Stripe\Stripe;
+use Stripe\Charge;
 use DB;
 
 class ServiceController extends Controller
 {
     public $successStatus = 200;
+    public $stripeSuccess = "succeeded";
     protected $validations;
 
     public function __construct(ServiceValidator $validations) {
@@ -35,6 +37,8 @@ class ServiceController extends Controller
         }
 
         try {
+            DB::beginTransaction();
+
             $serviceSetting = GeneralSetting::where('key', 'SERVICIO_DEPARTAMENTO')->where('active', true)->first();
             $taxPercent     = GeneralSetting::where('key', 'IVA_PORCENTAJE')->where('active', true)->first();
             $taydPercent    = GeneralSetting::where('key', 'TAYD_COMISION')->where('active', true)->first();
@@ -62,7 +66,7 @@ class ServiceController extends Controller
             // Total del proceso
             $total          = $serviceTotal + $taxService + $taydCommission + $stripeCommission + $taxStripe;
 
-            $service        = new Service();
+            $service                    = new Service();
             $service->request_user_id   = $request->user_id;
             $service->user_property_id  = $request->user_property_id;
             $service->stripe_customer_source_id = $request->stripe_customer_source_id;
@@ -78,7 +82,29 @@ class ServiceController extends Controller
             $service->total             = $total;
             $service->save();
 
+            \Stripe\Stripe::setApiKey(env('STRIPE_SECRET'));
+
+            $charge = \Stripe\Charge::create([
+                'amount'        => round($service->total, 0, PHP_ROUND_HALF_UP) * 100,
+                'currency'      => 'mxn',
+                'customer'      => $service->requester->stripeCustomer->stripe_customer_token,
+                'source'        => $service->stripeSource->stripe_customer_source_token,
+                'description'   => 'Servicio de limpieza TAYD.',
+                'capture'       => false
+            ]);
+
+            if($charge->status == $this->stripeSuccess) {
+                $service->charge_token  = $charge->id;
+                $service->save();
+
+                DB::commit();
+            } else {
+                DB::rollBack();
+                return response()->json(['error'=> 'No fue posible realizar el cobro a la tarjeta seleccionada.'], 403);
+            }
+
         } catch(Exception $exception) {
+            DB::rollBack();
             return response()->json(['error'=> 'Ocurrió un error al realizar la solicitud del servicio.'], 403);
         }
 
@@ -222,6 +248,68 @@ class ServiceController extends Controller
                         ->get();
 
         return response()->json($services, 200);
+    }
+
+    public function acceptService(Request $request) {
+        $response   = array();
+        $service    = Service::find($request->service_id);
+
+        if(is_null($service)){
+            return response()->json( ['error'=> "No se encontro el servicio con id ".$request->service_id], 403);
+        }
+
+        if($service->service_status_id == 1) {
+            try {
+                DB::beginTransaction();
+
+                $service->service_status_id     = 2;
+                $service->provider_user_id      = $request->user_id;
+                $service->save();
+
+                \Stripe\Stripe::setApiKey(env('STRIPE_SECRET'));
+                $charge = \Stripe\Charge::retrieve($service->charge_token);
+                $charge->capture();
+
+                $arrDistribution    = array();
+
+                foreach($service->property->userPropertyDistribution as $distribution) {
+                    array_push($arrDistribution, array(
+                        "user_property_distribution_id"     => $distribution->id,
+                        "property_type_price_id"            => $distribution->property_type_price_id,
+                        "quantity"                          => $distribution->quantity,
+                        "key"                               => $distribution->propertyTypePrice->key,
+                        "name"                              => $distribution->propertyTypePrice->name,
+                        "price"                             => $distribution->propertyTypePrice->price,
+                    ));
+                }
+
+                array_push($response, array(
+                    "id"                    => $service->id,
+                    "request_user_id"       => $service->request_user_id,
+                    "request_user_name"     => $service->requester->info->name. " ".$service->requester->info->last_name,
+                    "provider_user_id"      => $service->request_user_id,
+                    "provider_user_name"    => is_null($service->provider_user_name) ? "" : $service->provider->info->name. " ".$service->provider->info->last_name,
+                    "property_name"         => $service->property->name,
+                    "property_latitude"     => $service->property->latitude,
+                    "property_altitude"     => $service->property->altitude,
+                    "property_type_id"      => $service->property->propertyType->id,
+                    "property_type_name"    => $service->property->propertyType->name,
+                    "distribution"          => $arrDistribution,
+                    "dt_request"            => $service->dt_request,
+                    "has_consumables"       => $service->has_consumables,
+                    "created_at"            => Carbon::parse($service->created_at)->format("Y-m-d H:i:s")
+                ));
+
+                DB::commit();
+            } catch(Exception $exception) {
+                DB::rollBack();
+                return response()->json( ['error'=> $exception], 403);
+            }
+        } else {
+            return response()->json( ['error'=> "El servicio ya fue aceptado por otro TAYDER."], 403);
+        }
+
+        return response()->json($response, 200);
     }
 
     public function cancel($id) {
