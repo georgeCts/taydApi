@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Http\Requests\ServiceValidator;
+use App\Events\ServiceCreatedEvent;
 use Carbon\Carbon;
 use App\Service;
 use App\GeneralSetting;
@@ -97,7 +98,11 @@ class ServiceController extends Controller
                 $service->charge_token  = $charge->id;
                 $service->save();
 
+                $service->property;
+
                 DB::commit();
+
+                event(new ServiceCreatedEvent($service));
             } else {
                 DB::rollBack();
                 return response()->json(['error'=> 'No fue posible realizar el cobro a la tarjeta seleccionada.'], 403);
