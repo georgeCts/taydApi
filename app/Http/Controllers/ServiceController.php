@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Config;
 use App\Http\Requests\ServiceValidator;
 use App\Events\ServiceCreatedEvent;
 use Carbon\Carbon;
@@ -10,16 +11,32 @@ use App\Service;
 use App\GeneralSetting;
 use Stripe\Stripe;
 use Stripe\Charge;
+use Pusher\Pusher;
 use DB;
 
 class ServiceController extends Controller
 {
+    private $pusher;
     public $successStatus = 200;
     public $stripeSuccess = "succeeded";
     protected $validations;
 
     public function __construct(ServiceValidator $validations) {
         $this->validations = $validations;
+
+        $config = Config::get('broadcasting.connections.pusher');
+
+        $options = [
+            'cluster'   => $config['options']['cluster'],
+            'encrypted' => $config['options']['encrypted']
+        ];
+
+        $this->pusher = new Pusher(
+            $config['key'],
+            $config['secret'],
+            $config['app_id'],
+            $options
+        );
     }
 
     public function store(Request $request) {
@@ -102,7 +119,8 @@ class ServiceController extends Controller
 
                 DB::commit();
 
-                event(new ServiceCreatedEvent($service));
+                $this->pusher->trigger('private-notifications', 'service-accepted', $service);
+                //event(new ServiceCreatedEvent($service));
             } else {
                 DB::rollBack();
                 return response()->json(['error'=> 'No fue posible realizar el cobro a la tarjeta seleccionada.'], 403);

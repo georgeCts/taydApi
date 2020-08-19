@@ -17,8 +17,12 @@ Route::group(['prefix' => 'auth'], function () {
     Route::post('/signup', 'AuthController@signup');
     Route::get('/logout', 'AuthController@logout');
 });
+Route::group(['prefix' => 'channels'], function() {
+    Route::post('/auth', 'ChannelsController@auth');
+});
 
 Route::group(['middleware' => 'auth:api'], function() {
+
     Route::group(['prefix' => 'users'], function() {
         Route::get('/{id}', 'UserController@get');
         Route::post('/upload_document', 'UserController@uploadDocument');
