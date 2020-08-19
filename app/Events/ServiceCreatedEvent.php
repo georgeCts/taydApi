@@ -46,6 +46,6 @@ class ServiceCreatedEvent implements ShouldBroadcast {
      */
     public function broadcastOn()
     {
-        return new PresenceChannel('notifications');
+        return new PrivateChannel('notifications');
     }
 }
