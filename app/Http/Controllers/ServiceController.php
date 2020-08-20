@@ -238,6 +238,8 @@ class ServiceController extends Controller
                 "property_type_id"      => $service->property->propertyType->id,
                 "property_type_name"    => $service->property->propertyType->name,
                 "distribution"          => $arrDistribution,
+                "service_status_id"     => $service->service_status_id,
+                "service_status_name"   => $service->serviceStatus->name,
                 "dt_request"            => $service->dt_request,
                 "has_consumables"       => $service->has_consumables,
                 "created_at"            => Carbon::parse($service->created_at)->format("Y-m-d H:i:s")
