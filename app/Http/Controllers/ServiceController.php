@@ -205,6 +205,42 @@ class ServiceController extends Controller
         return response()->json($response, 200);
     }
 
+    public function listTayderScheduled($userId) {
+        $response = array();
+        $services = Service::where('provider_user_id', $userId)
+                        ->whereIn('service_status_id', [2, 3])
+                        ->orderBy('dt_request', 'ASC')
+                        ->get();
+
+        foreach($services as $service) {
+            array_push($response, array(
+                "id"                    => $service->id,
+                "request_user_id"       => $service->request_user_id,
+                "request_user_name"     => $service->requester->info->name. " ".$service->requester->info->last_name,
+                "provider_user_id"      => $service->request_user_id,
+                "provider_user_name"    => is_null($service->provider_user_name) ? "" : $service->provider->info->name. " ".$service->provider->info->last_name,
+                "stripe_customer_source_id" => $service->stripe_customer_source_id,
+                "service_status_id"     => $service->service_status_id,
+                "service_status_name"   => $service->serviceStatus->name,
+                "dt_request"            => $service->dt_request,
+                "dt_start"              => $service->dt_start,
+                "dt_finish"             => $service->dt_finish,
+                "dt_canceled"           => $service->dt_canceled,
+                "has_consumables"       => $service->has_consumables,
+                "service_cost"          => $service->service_cost,
+                "tax_service"           => $service->tax_service,
+                "tayd_commission"       => $service->tayd_commission,
+                "stripe_commission"     => $service->stripe_commission,
+                "tax_stripe"            => $service->tax_stripe,
+                "discount"              => $service->discount,
+                "total"                 => $service->total,
+                "created_at"            => Carbon::parse($service->created_at)->format("Y-m-d H:i:s")
+            ));
+        }
+
+        return response()->json($response, 200);
+    }
+
     public function listHistory($userId) {
         $response = array();
         $services = Service::where('request_user_id', $userId)
@@ -333,6 +369,29 @@ class ServiceController extends Controller
         }
 
         return response()->json($response, 200);
+    }
+
+    public function startService(Request $request) {
+        $response   = array();
+        $service    = Service::find($request->service_id);
+
+        if(is_null($service)){
+            return response()->json( ['error'=> "No se encontro el servicio con id ".$request->service_id], 403);
+        }
+
+        if($service->service_status_id == 2) {
+            try {
+                $service->service_status_id     = 3;
+                $service->dt_start              = Now();
+                $service->save();
+            } catch(Exception $exception) {
+                return response()->json( ['error'=> $exception], 403);
+            }
+        } else {
+            return response()->json( ['error'=> "El servicio no se encuentra en estatus ACEPTADO."], 403);
+        }
+
+        return response()->json($service, 200);
     }
 
     public function cancel($id) {
