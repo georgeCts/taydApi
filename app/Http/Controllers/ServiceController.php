@@ -213,21 +213,33 @@ class ServiceController extends Controller
                         ->get();
 
         foreach($services as $service) {
+            $arrDistribution = array();
+
+            foreach($service->property->userPropertyDistribution as $distribution) {
+                array_push($arrDistribution, array(
+                    "user_property_distribution_id"     => $distribution->id,
+                    "property_type_price_id"            => $distribution->property_type_price_id,
+                    "quantity"                          => $distribution->quantity,
+                    "key"                               => $distribution->propertyTypePrice->key,
+                    "name"                              => $distribution->propertyTypePrice->name,
+                    "price"                             => $distribution->propertyTypePrice->price,
+                ));
+            }
+
             array_push($response, array(
                 "id"                    => $service->id,
                 "request_user_id"       => $service->request_user_id,
                 "request_user_name"     => $service->requester->info->name. " ".$service->requester->info->last_name,
                 "provider_user_id"      => $service->request_user_id,
                 "provider_user_name"    => is_null($service->provider_user_name) ? "" : $service->provider->info->name. " ".$service->provider->info->last_name,
-                "stripe_customer_source_id" => $service->stripe_customer_source_id,
                 "property_name"         => $service->property->name,
-                "service_status_id"     => $service->service_status_id,
-                "service_status_name"   => $service->serviceStatus->name,
+                "property_latitude"     => $service->property->latitude,
+                "property_altitude"     => $service->property->altitude,
+                "property_type_id"      => $service->property->propertyType->id,
+                "property_type_name"    => $service->property->propertyType->name,
+                "distribution"          => $arrDistribution,
                 "dt_request"            => $service->dt_request,
-                "dt_start"              => $service->dt_start,
-                "dt_finish"             => $service->dt_finish,
                 "has_consumables"       => $service->has_consumables,
-                "total"                 => $service->total,
                 "created_at"            => Carbon::parse($service->created_at)->format("Y-m-d H:i:s")
             ));
         }
