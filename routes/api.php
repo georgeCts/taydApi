@@ -65,6 +65,8 @@ Route::group(['middleware' => 'auth:api'], function() {
         Route::get('/{id}', 'ServiceController@get');
         Route::post('/accept', 'ServiceController@acceptService');
         Route::post('/start', 'ServiceController@startService');
+        Route::post('/finish', 'ServiceController@finishService');
+        Route::post('/rate-service', 'ServiceController@rateService');
         Route::get('/list-scheduled/{id}', 'ServiceController@listScheduled');
         Route::get('/list-tayder-scheduled/{id}', 'ServiceController@listTayderScheduled');
         Route::get('/list-history/{id}', 'ServiceController@listHistory');

@@ -24,6 +24,7 @@ class CreateUsersTable extends Migration
             $table->boolean('confirmed')->default(0);
             $table->boolean('isTayder')->default(0);
             $table->boolean('on_review')->default(0);
+            $table->string('expo_token')->nullable();
             $table->timestamps();
         });
     }

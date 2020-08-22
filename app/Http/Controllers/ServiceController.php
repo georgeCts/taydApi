@@ -301,6 +301,8 @@ class ServiceController extends Controller
                 "tax_stripe"            => $service->tax_stripe,
                 "discount"              => $service->discount,
                 "total"                 => $service->total,
+                "rating"                => $service->rating,
+                "comments"              => $service->comments,
                 "created_at"            => Carbon::parse($service->created_at)->format("Y-m-d H:i:s")
             ));
         }
@@ -380,11 +382,19 @@ class ServiceController extends Controller
     }
 
     public function startService(Request $request) {
-        $response   = array();
-        $service    = Service::find($request->service_id);
+        $response    = array();
+        $service     = Service::find($request->service_id);
+        
+        if(is_null($service)) {
+            return response()->json( ['error' => "No se encontro el servicio con id ".$request->service_id], 403);
+        }
+        
+        $arrServices    = Service::where('service_status_id', 3)
+                            ->where('provider_user_id', $service->provider_user_id)
+                            ->get();
 
-        if(is_null($service)){
-            return response()->json( ['error'=> "No se encontro el servicio con id ".$request->service_id], 403);
+        if(sizeof($arrServices) > 0) {
+            return response()->json(['error' => 'Actualmente tienes un servicio en curso, intenta de nuevo después de finalizarlo.'], 403);
         }
 
         if($service->service_status_id == 2) {
@@ -396,17 +406,56 @@ class ServiceController extends Controller
                 return response()->json( ['error'=> $exception], 403);
             }
         } else {
-            return response()->json( ['error'=> "El servicio no se encuentra en estatus ACEPTADO."], 403);
+            return response()->json( ['error'=> "El servicio no se encuentra en estatus AGENDADO."], 403);
         }
 
         return response()->json($service, 200);
     }
 
-    public function cancel($id) {
-        $service = Service::find($id);
+    public function finishService(Request $request) {
+        $response   = array();
+        $service    = Service::find($request->service_id);
+
         if(is_null($service)){
+            return response()->json( ['error'=> "No se encontro el servicio con id ".$request->service_id], 403);
+        }
+
+        if($service->service_status_id == 3) {
+            try {
+                $service->service_status_id     = 4;
+                $service->dt_finish             = Now();
+                $service->save();
+            } catch(Exception $exception) {
+                return response()->json( ['error'=> $exception], 403);
+            }
+        } else {
+            return response()->json( ['error'=> "El servicio no se encuentra en estatus EN CURSO."], 403);
+        }
+
+        return response()->json($service, 200);
+    }
+
+    public function rateService(Request $request) {
+        $service            = Service::find($request->service_id);
+
+        if(is_null($service)) {
             return response()->json( ['error'=> "No se encontro el servicio con id ".$id], 403);
         }
+
+        $service->rating    = $request->rating;
+        $service->comments  = $request->comments;
+        $service->save();
+
+        return response()->json(['message' => 'Servicio calificado correctamente.'], 200);
+    }
+
+    public function cancel($id) {
+        $service = Service::find($id);
+
+        if(is_null($service)) {
+            return response()->json( ['error'=> "No se encontro el servicio con id ".$id], 403);
+        }
+
         $service->is_canceled   = true;
         $service->dt_canceled   = Now();
         $service->save();

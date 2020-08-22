@@ -33,6 +33,10 @@ class CreateServicesTable extends Migration
             $table->decimal('discount', 6, 2)->nullable();
             $table->decimal('total', 6, 2)->nullable();
             $table->string('charge_token')->nullable();
+            $table->string('refund_token')->nullable();
+
+            $table->integer('rating')->default(0);
+            $table->text('comments')->nullable();
             $table->timestamps();
 
             $table->foreign('request_user_id')->references('id')->on('users');

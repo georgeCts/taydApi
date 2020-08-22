@@ -21,6 +21,9 @@ class Service extends Model
         'dt_finish',
         'has_consumables',
         'charge_token',
+        'refund_token',
+        'rating',
+        'comments'
     ];
 
     public function requester() {
