@@ -370,6 +370,8 @@ class ServiceController extends Controller
                 ));
 
                 DB::commit();
+
+                $this->pusher->trigger('notifications'.$service->request_user_id, 'service-status', ["message" => "Tu servicio ha sido aceptado por un Tayder."]);
             } catch(Exception $exception) {
                 DB::rollBack();
                 return response()->json( ['error'=> $exception], 403);
@@ -394,7 +396,7 @@ class ServiceController extends Controller
                             ->get();
 
         if(sizeof($arrServices) > 0) {
-            return response()->json(['error' => 'Actualmente tienes un servicio en curso, intenta de nuevo después de finalizarlo.'], 403);
+            return response()->json(['error' => 'Actualmente tienes un servicio en curso, intenta de nuevo después de finalizarlo'], 403);
         }
 
         if($service->service_status_id == 2) {
@@ -402,6 +404,8 @@ class ServiceController extends Controller
                 $service->service_status_id     = 3;
                 $service->dt_start              = Now();
                 $service->save();
+
+                $this->pusher->trigger('notifications'.$service->request_user_id, 'service-status', ["message" => "Tienes 1 cita en curso"]);
             } catch(Exception $exception) {
                 return response()->json( ['error'=> $exception], 403);
             }
@@ -425,6 +429,8 @@ class ServiceController extends Controller
                 $service->service_status_id     = 4;
                 $service->dt_finish             = Now();
                 $service->save();
+
+                $this->pusher->trigger('notifications'.$service->request_user_id, 'service-status', ["message" => "Un servicio ha finalizado"]);
             } catch(Exception $exception) {
                 return response()->json( ['error'=> $exception], 403);
             }
@@ -459,6 +465,8 @@ class ServiceController extends Controller
         $service->is_canceled   = true;
         $service->dt_canceled   = Now();
         $service->save();
+
+        $this->pusher->trigger('notifications'.$service->request_user_id, 'service-status', ["message" => "Un servicio ha sido cancelado por un Tayder."]);
 
         return response()->json(['message' => 'Servicio cancelado correctamente.'], 200);
     }
