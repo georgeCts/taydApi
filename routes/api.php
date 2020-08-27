@@ -75,6 +75,11 @@ Route::group(['middleware' => 'auth:api'], function() {
         Route::delete('/cancel/{id}', 'ServiceController@cancel');
     });
 
+    Route::group(['prefix' => 'chat'], function() {
+        Route::get('/{id}', 'ChatController@getMessages');
+        Route::post('/new-message', 'ChatController@storeMessage');
+    });
+
     Route::group(['prefix' => 'coupons'], function() {
         Route::post('/', 'CouponController@store');
         Route::put('/', 'CouponController@store');
