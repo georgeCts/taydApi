@@ -66,13 +66,13 @@ Route::group(['middleware' => 'auth:api'], function() {
         Route::post('/accept', 'ServiceController@acceptService');
         Route::post('/start', 'ServiceController@startService');
         Route::post('/finish', 'ServiceController@finishService');
+        Route::post('/cancel', 'ServiceController@cancel');
         Route::post('/rate-service', 'ServiceController@rateService');
         Route::get('/list-scheduled/{id}', 'ServiceController@listScheduled');
         Route::get('/list-tayder-scheduled/{id}', 'ServiceController@listTayderScheduled');
         Route::get('/list-history/{id}', 'ServiceController@listHistory');
         Route::get('/list-tayder-history/{id}', 'ServiceController@listTayderHistory');
         Route::get('/earnings/{id}', 'ServiceController@getEarnings');
-        Route::delete('/cancel/{id}', 'ServiceController@cancel');
     });
 
     Route::group(['prefix' => 'chat'], function() {

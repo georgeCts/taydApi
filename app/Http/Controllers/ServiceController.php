@@ -455,18 +455,24 @@ class ServiceController extends Controller
         return response()->json(['message' => 'Servicio calificado correctamente.'], 200);
     }
 
-    public function cancel($id) {
-        $service = Service::find($id);
+    public function cancel(Request $request) {
+        $service = Service::find($request->service_id);
 
         if(is_null($service)) {
-            return response()->json( ['error'=> "No se encontro el servicio con id ".$id], 403);
+            return response()->json( ['error'=> "No se encontro el servicio con id ".$request->service_id], 403);
         }
 
-        $service->is_canceled   = true;
-        $service->dt_canceled   = Now();
+        $service->service_status_id = 5;
+        $service->dt_canceled       = Now();
         $service->save();
 
-        $this->pusher->trigger('notifications'.$service->request_user_id, 'service-status', ["message" => "Un servicio ha sido cancelado por un Tayder."]);
+        if($request->from_tayder) {
+            $this->pusher->trigger('notifications'.$service->request_user_id, 'service-status', ["message" => "Un servicio ha sido cancelado por un Tayder."]);
+        } else {
+            if($request->service_status == 2) {
+                $this->pusher->trigger('notifications'.$service->provider_user_id, 'service-status', ["message" => "Un servicio ha sido cancelado."]);
+            }
+        }
 
         return response()->json(['message' => 'Servicio cancelado correctamente.'], 200);
     }
