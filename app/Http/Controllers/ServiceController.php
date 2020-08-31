@@ -150,8 +150,8 @@ class ServiceController extends Controller
     public function getEarnings($userId) {
         date_default_timezone_set("America/Mexico_City");
 
-        $monday = date('Y-m-d', strtotime('monday this week') );
-        $sunday = date('Y-m-d', strtotime('sunday this week') );
+        $monday = date('Y-m-d', strtotime('monday this week')) . " 00:00:01";
+        $sunday = date('Y-m-d', strtotime('sunday this week')) . " 23:59:59";
 
         $subtotal = DB::table('services')
                         ->where('service_status_id', 4)
@@ -174,6 +174,7 @@ class ServiceController extends Controller
         $response = array();
         $services = Service::where('request_user_id', $userId)
                         ->whereIn('service_status_id', [1, 2, 3])
+                        ->orderBy('dt_request', 'ASC')
                         ->get();
 
         foreach($services as $service) {
@@ -253,6 +254,7 @@ class ServiceController extends Controller
         $response = array();
         $services = Service::where('request_user_id', $userId)
                         ->whereIn('service_status_id', [4, 5])
+                        ->orderBy('id', 'DESC')
                         ->get();
 
         \Stripe\Stripe::setApiKey(env('STRIPE_SECRET'));
