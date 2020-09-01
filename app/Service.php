@@ -7,6 +7,7 @@ use App\User;
 use App\UserProperty;
 use App\ServiceStatus;
 use App\StripeCustomerSource;
+use App\ChatMessage;
 
 class Service extends Model
 {
@@ -44,5 +45,9 @@ class Service extends Model
 
     public function stripeSource() {
         return $this->hasOne(StripeCustomerSource::class, 'id', 'stripe_customer_source_id');
+    }
+
+    public function messages() {
+        return $this->hasMany(ChatMessage::class);
     }
 }

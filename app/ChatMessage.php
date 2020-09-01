@@ -14,7 +14,7 @@ class ChatMessage extends Model
         'fromTayder'
     ];
 
-    public function Service() {
-        $this->belongsTo(Service::class);
+    public function service() {
+        return $this->belongsTo(Service::class);
     }
 }

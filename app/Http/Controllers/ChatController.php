@@ -5,8 +5,9 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Config;
 use App\Http\Requests\ChatValidator;
-use Pusher\Pusher;
 use App\ChatMessage;
+use Carbon\Carbon;
+use Pusher\Pusher;
 
 class ChatController extends Controller
 {
@@ -44,7 +45,9 @@ class ChatController extends Controller
             unset($data['id']);
         }
 
-        $message = ChatMessage::create($data);
+        $message                = ChatMessage::create($data);
+        $message->user_name     = $message->service->requester->info->name;
+        $message->provider_name = $message->service->provider->info->name;
 
         $this->pusher->trigger('chat'.$message->service_id, 'new-message', ["message" => $message]);
 
@@ -52,8 +55,21 @@ class ChatController extends Controller
     }
 
     public function getMessages($serviceId) {
+        $response = array();
         $messages = ChatMessage::where('service_id', $serviceId)->get();
 
-        return response()->json($messages, 200);
+        foreach($messages as $message) {
+            array_push($response, array(
+                "id"            => $message->id,
+                "service_id"    => $message->service_id,
+                "user_name"     => $message->service->requester->info->name,
+                "provider_name" => $message->service->provider->info->name,
+                "message"       => $message->message,
+                "fromTayder"    => $message->fromTayder,
+                "created_at"    => Carbon::parse($message->created_at)->format("Y-m-d H:i:s")
+            ));
+        }
+
+        return response()->json($response, 200);
     }
 }
