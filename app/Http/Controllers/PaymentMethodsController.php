@@ -30,7 +30,7 @@ class PaymentMethodsController extends Controller
                 "name"              => $result->name,
                 "exp_month"         => $result->exp_month,
                 "exp_year"          => $result->exp_year,
-                "number"            => "XXXX XXXX XXXX " . $result->last4,
+                "number"            => "**** **** **** " . $result->last4,
                 "country"           => $result->country,
                 "is_predetermined"  => $source->is_predetermined
             ));
@@ -89,7 +89,7 @@ class PaymentMethodsController extends Controller
             "name"              => $result->name,
             "exp_month"         => $result->exp_month,
             "exp_year"          => $result->exp_year,
-            "number"            => "XXXX XXXX XXXX " . $result->last4,
+            "number"            => "**** **** **** " . $result->last4,
             "country"           => $result->country,
             "is_predetermined"  => $source->is_predetermined
         );

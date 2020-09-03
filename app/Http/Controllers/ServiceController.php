@@ -287,7 +287,7 @@ class ServiceController extends Controller
                 "distribution"          => $arrDistribution,
                 "stripe_customer_source_id" => $service->stripe_customer_source_id,
                 "stripe_source_brand"   => $source->brand,
-                "stripe_source_number"  => "XXXX XXXX XXXX ".$source->last4,
+                "stripe_source_number"  => "**** **** **** ".$source->last4,
                 "stripe_source_name"    => $source->name,
                 "service_status_id"     => $service->service_status_id,
                 "service_status_name"   => $service->serviceStatus->name,
