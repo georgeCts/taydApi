@@ -40,6 +40,31 @@ class PaymentMethodsController extends Controller
 
     }
 
+    public function get($id) {
+        $source = StripeCustomerSource::where('id', $id)->first();
+
+        if(is_null($source)){
+            return response()->json(['error'=> "No existe una tarjeta con el id:" . $id], 403);
+        }
+
+        \Stripe\Stripe::setApiKey(env('STRIPE_SECRET'));
+
+        $result     = \Stripe\Customer::retrieveSource($source->userStripeCustomer->stripe_customer_token, $source->stripe_customer_source_token, []);
+        $response   = array(
+            "id"                => $source->id,
+            "key"               => $result->id,
+            "brand"             => $result->brand,
+            "name"              => $result->name,
+            "exp_month"         => $result->exp_month,
+            "exp_year"          => $result->exp_year,
+            "number"            => "**** **** **** " . $result->last4,
+            "country"           => $result->country,
+            "is_predetermined"  => $source->is_predetermined
+        );
+
+        return response()->json($response, 200);
+    }
+
     public function store(Request $request) {
         $customer = UserStripeCustomer::where('user_id', $request->user_id)->first();
 

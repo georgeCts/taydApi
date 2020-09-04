@@ -54,6 +54,7 @@ Route::group(['middleware' => 'auth:api'], function() {
     });
 
     Route::group(['prefix' => 'payment-methods'], function() {
+        Route::get('/{id}', 'PaymentMethodsController@get');
         Route::post('/', 'PaymentMethodsController@store');
         Route::get('/user-cards/{id}', 'PaymentMethodsController@listCards');
         Route::get('/predetermined/{id}', 'PaymentMethodsController@setPredetermined');
