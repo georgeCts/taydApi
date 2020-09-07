@@ -47,6 +47,11 @@ class GeneralSettingsSeeder extends Seeder
                 'description'   => 'Precio por el consumo de los insumos extra solicitado por el cliente.',
                 'value'         => '50'
             ],
+            [
+                'key'           => 'CANCELACION_PENALIZACION',
+                'description'   => 'Costo por cancelar un servicio agendado.',
+                'value'         => '35'
+            ],
         );
 
         foreach ($items as $item) {

@@ -6,12 +6,12 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Config;
 use App\Http\Requests\ServiceValidator;
 use App\Events\ServiceCreatedEvent;
-use Carbon\Carbon;
 use App\Service;
 use App\GeneralSetting;
 use Stripe\Stripe;
 use Stripe\Charge;
 use Pusher\Pusher;
+use Carbon\Carbon;
 use DB;
 
 class ServiceController extends Controller
@@ -120,12 +120,10 @@ class ServiceController extends Controller
                 DB::commit();
 
                 $this->pusher->trigger('private-notifications', 'service-accepted', $service);
-                //event(new ServiceCreatedEvent($service));
             } else {
                 DB::rollBack();
                 return response()->json(['error'=> 'No fue posible realizar el cobro a la tarjeta seleccionada.'], 403);
             }
-
         } catch(Exception $exception) {
             DB::rollBack();
             return response()->json(['error'=> 'Ocurrió un error al realizar la solicitud del servicio.'], 403);
@@ -337,9 +335,11 @@ class ServiceController extends Controller
                 $service->provider_user_id      = $request->user_id;
                 $service->save();
 
-                \Stripe\Stripe::setApiKey(env('STRIPE_SECRET'));
-                $charge = \Stripe\Charge::retrieve($service->charge_token);
-                $charge->capture();
+                if(is_null($service->charge_token)) {
+                    \Stripe\Stripe::setApiKey(env('STRIPE_SECRET'));
+                    $charge = \Stripe\Charge::retrieve($service->charge_token);
+                    $charge->capture();
+                }
 
                 $arrDistribution    = array();
 
@@ -461,19 +461,78 @@ class ServiceController extends Controller
         $service = Service::find($request->service_id);
 
         if(is_null($service)) {
-            return response()->json( ['error'=> "No se encontro el servicio con id ".$request->service_id], 403);
+            return response()->json( ['error'=> "No se encontro el servicio con id: " . $request->service_id], 403);
         }
 
-        $service->service_status_id = 5;
-        $service->dt_canceled       = Now();
-        $service->save();
+        if($service->service_status_id <= 2) {
+            try {
+                DB::beginTransaction();
+                $refund = null;
 
-        if($request->from_tayder) {
-            $this->pusher->trigger('notifications'.$service->request_user_id, 'service-status', ["message" => "Un servicio ha sido cancelado por un Tayder."]);
-        } else {
-            if($request->service_status == 2) {
-                $this->pusher->trigger('notifications'.$service->provider_user_id, 'service-status', ["message" => "Un servicio ha sido cancelado."]);
+                if($request->from_tayder) {
+                    if($service->service_status_id == 2) {
+                        if($service->attempts <= 4) {
+                            $service->provider_user_id  = null;
+                            $service->service_status_id = 1;
+                            $service->attempts          = (integer)$service->attempts + 1;
+                            $service->save();
+
+                            DB::commit();
+
+                            $this->pusher->trigger('private-notifications', 'service-accepted', $service);
+                        } else {
+                            $service->provider_user_id  = null;
+                            $service->service_status_id = 5;
+                            $service->save();
+
+                            \Stripe\Stripe::setApiKey(env('STRIPE_SECRET'));
+                            $refund = \Stripe\Refund::create([
+                                'charge' => $service->charge_token,
+                            ]);
+
+                            DB::commit();
+
+                            $this->pusher->trigger('notifications'.$service->request_user_id, 'service-status', ["message" => "El servicio ha sido cancelado, en breve recibirá su reembolso."]);
+                        }
+                    } else {
+                        return response()->json(['error'=> "No se puede cancelar un servicio que se encuentra en curso."], 403);
+                    }
+                } else {
+                    if($request->service_status == 2) {
+                        $objCancelacion = GeneralSetting::where('key', 'CANCELACION_PENALIZACION')->first();
+                        
+                        \Stripe\Stripe::setApiKey(env('STRIPE_SECRET'));
+                        $charge = \Stripe\Charge::retrieve($service->charge_token);
+                        $refundValue = ($charge->amount / 100) - (integer)$objCancelacion->value;
+    
+                        $refund = \Stripe\Refund::create([
+                            'charge'    => $service->charge_token,
+                            'amount'    => round($refundValue, 0, PHP_ROUND_HALF_UP) * 100,
+                        ]);
+
+                        $this->pusher->trigger('notifications'.$service->provider_user_id, 'service-status', ["message" => "Un servicio ha sido cancelado."]);
+                    }
+
+                    $service->service_status_id = 5;
+                    $service->dt_canceled       = Now();
+
+                    if(!is_null($refund)) {
+                        $service->refund_token      = $refund->id;
+                    }
+
+                    $service->save();
+
+                    DB::commit();
+                }
+            } catch(\Stripe\Exception\CardException $e) {
+                DB::rollBack();
+                return response()->json(['error' => $e->getError()->message], 403);
+            } catch(Exception $e) {
+                DB::rollBack();
+                return response()->json(['error' => "Ocurrió un error al momento de cancelar el servicio."], 403);
             }
+        } else {
+            return response()->json(['error'=> "No se puede cancelar un servicio que se encuentra en curso."], 403);
         }
 
         return response()->json(['message' => 'Servicio cancelado correctamente.'], 200);

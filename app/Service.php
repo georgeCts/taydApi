@@ -23,6 +23,7 @@ class Service extends Model
         'has_consumables',
         'charge_token',
         'refund_token',
+        'attempts',
         'rating',
         'comments'
     ];

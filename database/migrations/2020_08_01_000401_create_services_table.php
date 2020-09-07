@@ -35,6 +35,7 @@ class CreateServicesTable extends Migration
             $table->string('charge_token')->nullable();
             $table->string('refund_token')->nullable();
 
+            $table->integer('attempts')->default(0);
             $table->integer('rating')->default(0);
             $table->text('comments')->nullable();
             $table->timestamps();
