@@ -12,9 +12,9 @@
 */
 
 Route::get('/', function () {
-    return view('welcome');
+    return view('contents.Index');
 });
 
 Route::get('/privacidad', function () {
-    return view('privacidad');
+    return view('contents.Privacidad');
 });
