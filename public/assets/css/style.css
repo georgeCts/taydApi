@@ -532,12 +532,19 @@ section {
 
 .features .content .icon-box {
   margin-top: 25px;
+  text-align: center;
 }
 
 .features .content .icon-box h4 {
+  font-family: trueno-light !important;
   font-size: 20px;
-  font-weight: 700;
-  margin: 5px 0 10px 60px;
+  color: rgb(136, 136, 136);
+  margin: 10px 30px;
+  text-align: center;
+}
+
+.features .content .icon-box img {
+  width: 85%;
 }
 
 .features .content .icon-box i {
@@ -942,15 +949,15 @@ section {
 --------------------------------------------------------------*/
 .contact .info {
   padding: 20px 40px;
-  background: #f1f3f6;
-  color: #47536e;
+  background: #e4123a;
+  color: #FFF;
   text-align: center;
   border: 1px solid #fff;
 }
 
 .contact .info i {
   font-size: 48px;
-  color: #9fb2d8;
+  color: #FFF;
   margin-bottom: 15px;
 }
 
@@ -1024,7 +1031,7 @@ section {
 .contact .php-email-form label {
   font-family: "Poppins", sans-serif;
   margin-bottom: 5px;
-  color: #8a8c95;
+  color: #60605f;
 }
 
 .contact .php-email-form input, .contact .php-email-form textarea {
@@ -1034,7 +1041,7 @@ section {
 }
 
 .contact .php-email-form input::focus, .contact .php-email-form textarea::focus {
-  background-color: #e4123a;
+  background-color: #e4123a !important;
 }
 
 .contact .php-email-form input {
@@ -1096,7 +1103,7 @@ section {
 #footer {
   background: #fff;
   padding: 0 0 30px 0;
-  color: #47536e;
+  color: #60605f;
   font-size: 14px;
   background: #eff2f8;
 }
@@ -1114,7 +1121,7 @@ section {
   padding: 0;
   line-height: 1;
   font-weight: 600;
-  color: #47536e;
+  color: #60605f;
 }
 
 #footer .footer-newsletter form {
@@ -1168,7 +1175,7 @@ section {
   padding: 2px 0 2px 0;
   line-height: 1;
   font-weight: 700;
-  color: #47536e;
+  color: #60605f;
 }
 
 #footer .footer-top .footer-contact p {
@@ -1182,7 +1189,7 @@ section {
 #footer .footer-top h4 {
   font-size: 16px;
   font-weight: bold;
-  color: #47536e;
+  color: #60605f;
   position: relative;
   padding-bottom: 12px;
 }

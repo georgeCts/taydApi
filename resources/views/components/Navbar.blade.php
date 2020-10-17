@@ -9,8 +9,8 @@
             <nav class="nav-menu d-none d-lg-block">
                 <ul>
                     <li class="active"><a href="/">Inicio</a></li>
-                    <li><a href="#services">Servicios</a></li>
-                    <li><a href="#downloads">Descargas</a></li>
+                    <li><a href="#features">Beneficios</a></li>
+                    <li><a href="#contact">Contacto</a></li>
                 </ul>
             </nav><!-- .nav-menu -->
         </div>
