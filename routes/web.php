@@ -18,3 +18,7 @@ Route::get('/', function () {
 Route::get('/privacidad', function () {
     return view('contents.Privacidad');
 });
+
+Route::get('/terminos-condiciones', function () {
+    return view('contents.TerminosCondiciones');
+});

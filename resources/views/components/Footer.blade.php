@@ -22,7 +22,7 @@
                             <li><i class="bx bx-chevron-right"></i> <a href="#">Inicio</a></li>
                             <li><i class="bx bx-chevron-right"></i> <a href="#">Nosotros</a></li>
                             <li><i class="bx bx-chevron-right"></i> <a href="#">Servicios</a></li>
-                            <li><i class="bx bx-chevron-right"></i> <a href="#">Términos y Condiciones</a></li>
+                            <li><i class="bx bx-chevron-right"></i> <a href="/terminos-condiciones">Términos y Condiciones</a></li>
                             <li><i class="bx bx-chevron-right"></i> <a href="/privacidad">Política de Privacidad</a></li>
                         </ul>
                     </div>
