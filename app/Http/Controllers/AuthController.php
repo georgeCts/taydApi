@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Http\Requests\UserValidator;
+use Twilio\Rest\Client;
 use App\User;
 use App\UserInfo;
 use App\UserStripeCustomer;
@@ -16,9 +17,13 @@ class AuthController extends Controller
 {
     public $successStatus = 200;
     protected $validaciones;
+    protected $sid;
+    protected $token;
 
     public function __construct(UserValidator $validaciones) {
         $this->validaciones = $validaciones;
+        $this->sid          = getenv("TWILIO_ACCOUNT_SID");
+        $this->token        = getenv("TWILIO_AUTH_TOKEN");
     }
 
     public function login(Request $request){
@@ -50,9 +55,8 @@ class AuthController extends Controller
     public function signup(Request $request) {
         $validacion = $this->validaciones->signup($request);
 
-        if($validacion  !== true){
+        if($validacion  !== true)
             return response()->json(['error'=> $validacion->original], 403);
-        }
 
         try {
             $user               = new User();
@@ -99,5 +103,41 @@ class AuthController extends Controller
         return response()->json([
             'message' => "Successfully logged out"
         ]);
+    }
+
+    public function sendVerificationCode(Request $request) {
+        try {
+            $twilio = new Client($this->sid, $this->token);
+
+            $verification = $twilio->verify->v2
+                                ->services("VAbae211d6cdcd683f14138eb5317413e2")
+                                ->verifications->create("+52".$request->phone, "sms");
+        } catch(Exception $ex) {
+            return response()->json(['error'=> "No fue posible enviar el código de verificación a este número telefónico."], 403);
+        }
+
+        return response()->json(['message' => "Operación exitosa"], 200);
+    }
+
+    public function confirmVerificationCode(Request $request) {
+        $validacion = $this->validaciones->verificationCode($request);
+
+        if($validacion  !== true)
+            return response()->json(['error'=> $validacion->original], 403);
+
+        try {
+            $twilio = new Client($this->sid, $this->token);
+
+            $verification_check = $twilio->verify->v2
+                                ->services("VAbae211d6cdcd683f14138eb5317413e2")
+                                ->verificationChecks
+                                ->create($request->code,
+                                        ["to" => "+52".$request->phone]
+                                    );
+        } catch(Exception $ex) {
+            return response()->json(['error'=> "El código ingresado es inválido o expiró."], 403);
+        }
+
+        return response()->json(['message' => "Operación exitosa"], 200);
     }
 }

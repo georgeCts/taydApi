@@ -16,6 +16,9 @@ Route::group(['prefix' => 'auth'], function () {
     Route::post('/login', 'AuthController@login');
     Route::post('/signup', 'AuthController@signup');
     Route::get('/logout', 'AuthController@logout');
+
+    Route::post('/send-verification', 'AuthController@sendVerificationCode');
+    Route::post('/confirm-verification', 'AuthController@confirmVerificationCode');
 });
 Route::group(['prefix' => 'channels'], function() {
     Route::post('/auth', 'ChannelsController@auth');

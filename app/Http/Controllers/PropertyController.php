@@ -21,13 +21,11 @@ class PropertyController extends Controller
         $validacion = $this->validaciones->store($request);
         $data       = $request->all();
 
-        if($validacion  !== true) {
+        if($validacion !== true)
             return response()->json(['error'=> $validacion->original], 403);
-        }
 
-        if(isset($data["id"]) || is_null($request->id)) {
+        if(isset($data["id"]) || is_null($request->id))
             unset($data['id']);
-        }
 
         $userProperty = UserProperty::create($data);
 
@@ -49,14 +47,15 @@ class PropertyController extends Controller
     public function get($id) {
         $userProperty = UserProperty::with(['propertyType:id,name'])->where("id", $id)->first();
 
-        if(is_null($userProperty)){
+        if(is_null($userProperty))
             return response()->json( ['error'=> "No se encontro la propiedad con id ".$id], 403);
-        }
 
         $response = array(
             "id"                    => $userProperty->id,
             "user_id"               => $userProperty->user_id,
             "name"                  => $userProperty->name,
+            "address"               => $userProperty->address,
+            "reference"             => $userProperty->reference,
             "latitude"              => $userProperty->latitude,
             "altitude"              => $userProperty->altitude,
             "is_predetermined"      => $userProperty->is_predetermined,
@@ -97,6 +96,8 @@ class PropertyController extends Controller
             "id"                    => $userProperty->id,
             "user_id"               => $userProperty->user_id,
             "name"                  => $userProperty->name,
+            "address"               => $userProperty->address,
+            "reference"             => $userProperty->reference,
             "latitude"              => $userProperty->latitude,
             "altitude"              => $userProperty->altitude,
             "is_predetermined"      => $userProperty->is_predetermined,

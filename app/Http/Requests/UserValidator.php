@@ -59,4 +59,15 @@ class UserValidator extends FormRequest
         
         return true;
     }
+
+    public function verificationCode(Request $request) {
+        $validator = Validator::make($request->all(), [
+            'code' => 'required|integer|min:6'
+        ]);
+
+        if($validator->fails())
+            return response()->json($validator->errors());
+
+        return true;
+    }
 }
