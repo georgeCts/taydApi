@@ -51,6 +51,14 @@ Route::group(['middleware' => 'auth:api'], function() {
         //Route::get('/{id}', 'PropertyController@get');
     });
 
+    Route::group(['prefix' => 'vehicles'], function() {
+
+    });
+
+    Route::group(['prefix' => 'vehicles-types'], function() {
+        Route::get('/', 'VehicleTypeController@getAll');
+    });
+
     Route::group(['prefix' => 'general-settings'], function() {
         Route::get('/list', 'GeneralSettingsController@listAll');
         Route::get('/key/{key}', 'GeneralSettingsController@getByKey');
