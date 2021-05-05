@@ -2,17 +2,19 @@
 
 namespace App\Http\Controllers;
 
+use DB;
+use App\Service;
+use Carbon\Carbon;
+use Pusher\Pusher;
+use Stripe\Charge;
+use Stripe\Stripe;
+use App\GeneralSetting;
+use App\ServiceVehicle;
 use Illuminate\Http\Request;
+use App\ServiceVehicleDetail;
+use App\Events\ServiceCreatedEvent;
 use Illuminate\Support\Facades\Config;
 use App\Http\Requests\ServiceValidator;
-use App\Events\ServiceCreatedEvent;
-use App\Service;
-use App\GeneralSetting;
-use Stripe\Stripe;
-use Stripe\Charge;
-use Pusher\Pusher;
-use Carbon\Carbon;
-use DB;
 
 class ServiceController extends Controller
 {
@@ -40,24 +42,27 @@ class ServiceController extends Controller
     }
 
     public function store(Request $request) {
-        $validate = $this->validations->store($request);
+        $validate = false;
 
-        if($validate  !== true) {
+        if(isset($request->service_type_id) && $request->service_type_id == 1)
+            $validate = $this->validations->store($request);
+        else
+            $validate = $this->validations->storeAdditional($request);
+
+        if($validate !== true)
             return response()->json(['error'=> $validate->original], 403);
-        }
 
         $services = Service::where('request_user_id', $request->user_id)
                         ->where('service_status_id', 1)
                         ->get();
 
-        if(sizeof($services) > 0) {
+        if(sizeof($services) > 0)
             return response()->json(['error'=> 'Existen servicios aún con estatus PENDIENTE, debe cancelar o esperar a que los acepten.'], 403);
-        }
 
         try {
             DB::beginTransaction();
 
-            $serviceSetting = GeneralSetting::where('key', 'SERVICIO_DEPARTAMENTO')->where('active', true)->first();
+            //$serviceSetting = GeneralSetting::where('key', 'SERVICIO_DEPARTAMENTO')->where('active', true)->first();
             $taxPercent     = GeneralSetting::where('key', 'IVA_PORCENTAJE')->where('active', true)->first();
             $taydPercent    = GeneralSetting::where('key', 'TAYD_COMISION')->where('active', true)->first();
             $stripePercent  = GeneralSetting::where('key', 'STRIPE_COMISION_PORCENTAJE')->where('active', true)->first();
@@ -65,16 +70,15 @@ class ServiceController extends Controller
     
             // pre-subtotal del servicio (SERVICIO_BASE + SUBTOTAL) - (DESCUENTO_RECAMARA + DESCUENTO BAÑO)
             $serviceTotal    = $request->service_cost;
-            if($request->discount > 0) {
+            if($request->discount > 0)
                 $serviceTotal = $serviceTotal - $request->discount;
-            }
-    
-            // Impuesto aplicado al pre-subtotal
-            $taxService      = $serviceTotal * ($taxPercent->value / 100);
-    
+
             // Comisión obtenida por Tayd
-            $taydCommission  = ($serviceTotal + $taxService) * ($taydPercent->value / 100);
-    
+            $taydCommission  = $serviceTotal * ($taydPercent->value / 100);
+
+            // Impuesto aplicado al pre-subtotal
+            $taxService      = ($serviceTotal + $taydCommission) * ($taxPercent->value / 100);
+
             // Comisión obtenida por Stripe
             $stripeCommission = (($serviceTotal + $taxService + $taydCommission) * ($stripePercent->value / 100)) + $stripeExtra->value;
     
@@ -86,8 +90,8 @@ class ServiceController extends Controller
 
             $service                    = new Service();
             $service->request_user_id   = $request->user_id;
-            $service->user_property_id  = $request->user_property_id;
             $service->stripe_customer_source_id = $request->stripe_customer_source_id;
+            $service->service_type_id   = $request->service_type_id;
             $service->service_status_id = 1;
             $service->dt_request        = $request->date." ".$request->time;
             $service->has_consumables   = $request->has_consumables;
@@ -98,7 +102,29 @@ class ServiceController extends Controller
             $service->tax_stripe        = $taxStripe;
             $service->discount          = $request->discount;
             $service->total             = $total;
+
+            if($request->service_type_id == 1)
+                $service->user_property_id  = $request->user_property_id;
+
             $service->save();
+
+            if($request->service_type_id == 2) {
+                $serviceVehicle                     = new ServiceVehicle();
+                $serviceVehicle->service_id         = $service->id;
+                $serviceVehicle->vehicle_type_id    = $request->vehicle_type_id;
+                $serviceVehicle->marca              = $request->marca;
+                $serviceVehicle->color              = $request->color;
+                $serviceVehicle->latitude           = $request->latitude;
+                $serviceVehicle->altitude           = $request->altitude;
+                $serviceVehicle->save();
+
+                foreach($request->service_details as $item) {
+                    $serviceDetails                         = new ServiceVehicleDetail();
+                    $serviceDetails->service_vehicle_id     = $serviceVehicle->id;
+                    $serviceDetails->vehicle_type_price_id  = $item;
+                    $serviceDetails->save();
+                }
+            }
 
             \Stripe\Stripe::setApiKey(env('STRIPE_SECRET'));
 
@@ -139,8 +165,17 @@ class ServiceController extends Controller
         }
         $service->requester;
         $service->provider;
-        $service->property;
-        $service->property->propertyType;
+
+        if($service->service_type_id == 1) {
+            $service->property;
+            $service->property->propertyType;
+        }
+
+        if($service->service_type_id == 2) {
+            $objServiceVehicle      = ServiceVehicle::where('service_id', $service->id)->first();
+            $objServiceVehicle->vehicleType;
+            $service->vehicle       = $objServiceVehicle;
+        }
 
         return response()->json($service, 200);
     }
@@ -178,6 +213,7 @@ class ServiceController extends Controller
         foreach($services as $service) {
             array_push($response, array(
                 "id"                    => $service->id,
+                "service_type_id"       => $service->service_type_id,
                 "request_user_id"       => $service->request_user_id,
                 "request_user_name"     => $service->requester->info->name. " ".$service->requester->info->last_name,
                 "provider_user_id"      => $service->request_user_id,
@@ -212,37 +248,69 @@ class ServiceController extends Controller
                         ->get();
 
         foreach($services as $service) {
-            $arrDistribution = array();
+            $arrDistribution    = array();
+            $arrDetails         = array();
 
-            foreach($service->property->userPropertyDistribution as $distribution) {
-                array_push($arrDistribution, array(
-                    "user_property_distribution_id"     => $distribution->id,
-                    "property_type_price_id"            => $distribution->property_type_price_id,
-                    "quantity"                          => $distribution->quantity,
-                    "key"                               => $distribution->propertyTypePrice->key,
-                    "name"                              => $distribution->propertyTypePrice->name,
-                    "price"                             => $distribution->propertyTypePrice->price,
-                ));
-            }
-
-            array_push($response, array(
+            $arrItem = array(
                 "id"                    => $service->id,
+                "service_type_id"       => $service->service_type_id,
                 "request_user_id"       => $service->request_user_id,
                 "request_user_name"     => $service->requester->info->name. " ".$service->requester->info->last_name,
-                "provider_user_id"      => $service->request_user_id,
+                "provider_user_id"      => $service->provider_user_id,
                 "provider_user_name"    => is_null($service->provider_user_name) ? "" : $service->provider->info->name. " ".$service->provider->info->last_name,
-                "property_name"         => $service->property->name,
-                "property_latitude"     => $service->property->latitude,
-                "property_altitude"     => $service->property->altitude,
-                "property_type_id"      => $service->property->propertyType->id,
-                "property_type_name"    => $service->property->propertyType->name,
-                "distribution"          => $arrDistribution,
                 "service_status_id"     => $service->service_status_id,
                 "service_status_name"   => $service->serviceStatus->name,
                 "dt_request"            => $service->dt_request,
                 "has_consumables"       => $service->has_consumables,
                 "created_at"            => Carbon::parse($service->created_at)->format("Y-m-d H:i:s")
-            ));
+            );
+
+            if($service->service_type_id == 1) {
+                foreach($service->property->userPropertyDistribution as $distribution) {
+                    array_push($arrDistribution, array(
+                        "user_property_distribution_id"     => $distribution->id,
+                        "property_type_price_id"            => $distribution->property_type_price_id,
+                        "quantity"                          => $distribution->quantity,
+                        "key"                               => $distribution->propertyTypePrice->key,
+                        "name"                              => $distribution->propertyTypePrice->name,
+                        "price"                             => $distribution->propertyTypePrice->price,
+                    ));
+                }
+
+                $arrItem = array_merge($arrItem, array(
+                    "property_name"         => $service->property->name,
+                    "property_latitude"     => $service->property->latitude,
+                    "property_altitude"     => $service->property->altitude,
+                    "property_type_id"      => $service->property->propertyType->id,
+                    "property_type_name"    => $service->property->propertyType->name,
+                    "distribution"          => $arrDistribution,
+                ));
+            }
+
+            if($service->service_type_id == 2) {
+                $objServiceVehicle = ServiceVehicle::where('service_id', $service->id)->first();
+
+                foreach($objServiceVehicle->details as $detail) {
+                    array_push($arrDetails, array(
+                        "service_vehicle_detail"     => $detail->id,
+                        "vehicle_type_price_id"      => $detail->vehicle_type_price_id,
+                        "key"                        => $detail->vehicleTypePrice->key,
+                        "name"                       => $detail->vehicleTypePrice->name,
+                        "price"                      => $detail->vehicleTypePrice->price,
+                    ));
+                }
+
+                $arrItem = array_merge($arrItem, array(
+                    "vehicle_type"  => $objServiceVehicle->vehicleType->name,
+                    "vehicle_brand" => $objServiceVehicle->marca,
+                    "vehicle_color" => $objServiceVehicle->color,
+                    "latitude"      => $objServiceVehicle->latitude,
+                    "altitude"      => $objServiceVehicle->altitude,
+                    "details"       => $arrDetails
+                ));
+            }
+
+            array_push($response, $arrItem);
         }
 
         return response()->json($response, 200);
@@ -260,29 +328,16 @@ class ServiceController extends Controller
         for($i = 0; $i < sizeof($services); $i++) {
             $service            = $services[$i];
             $arrDistribution    = array();
+            $arrDetails         = array();
             $source             = \Stripe\Customer::retrieveSource($service->requester->stripeCustomer->stripe_customer_token, $service->stripeSource->stripe_customer_source_token, []);
 
-            foreach($service->property->userPropertyDistribution as $distribution) {
-                array_push($arrDistribution, array(
-                    "user_property_distribution_id"     => $distribution->id,
-                    "property_type_price_id"            => $distribution->property_type_price_id,
-                    "quantity"                          => $distribution->quantity,
-                    "key"                               => $distribution->propertyTypePrice->key,
-                    "name"                              => $distribution->propertyTypePrice->name,
-                    "price"                             => $distribution->propertyTypePrice->price,
-                ));
-            }
-
-            array_push($response, array(
+            $arrItem = array(
                 "id"                    => $service->id,
+                "service_type_id"       => $service->service_type_id,
                 "request_user_id"       => $service->request_user_id,
                 "request_user_name"     => $service->requester->info->name. " ".$service->requester->info->last_name,
-                "provider_user_id"      => $service->request_user_id,
+                "provider_user_id"      => $service->provider_user_id,
                 "provider_user_name"    => is_null($service->provider_user_name) ? "" : $service->provider->info->name. " ".$service->provider->info->last_name,
-                "property_name"         => $service->property->name,
-                "property_type_id"      => $service->property->propertyType->id,
-                "property_type_name"    => $service->property->propertyType->name,
-                "distribution"          => $arrDistribution,
                 "stripe_customer_source_id" => $service->stripe_customer_source_id,
                 "stripe_source_brand"   => $source->brand,
                 "stripe_source_number"  => "**** **** **** ".$source->last4,
@@ -304,7 +359,52 @@ class ServiceController extends Controller
                 "rating"                => $service->rating,
                 "comments"              => $service->comments,
                 "created_at"            => Carbon::parse($service->created_at)->format("Y-m-d H:i:s")
-            ));
+            );
+
+            if($service->service_type_id == 1) {
+                foreach($service->property->userPropertyDistribution as $distribution) {
+                    array_push($arrDistribution, array(
+                        "user_property_distribution_id"     => $distribution->id,
+                        "property_type_price_id"            => $distribution->property_type_price_id,
+                        "quantity"                          => $distribution->quantity,
+                        "key"                               => $distribution->propertyTypePrice->key,
+                        "name"                              => $distribution->propertyTypePrice->name,
+                        "price"                             => $distribution->propertyTypePrice->price,
+                    ));
+                }
+
+               $arrItem = array_merge($arrItem, array(
+                    "property_name"         => $service->property->name,
+                    "property_type_id"      => $service->property->propertyType->id,
+                    "property_type_name"    => $service->property->propertyType->name,
+                    "distribution"          => $arrDistribution,
+                ));
+            }
+
+            if($service->service_type_id == 2) {
+                $objServiceVehicle = ServiceVehicle::where('service_id', $service->id)->first();
+
+                foreach($objServiceVehicle->details as $detail) {
+                    array_push($arrDetails, array(
+                        "service_vehicle_detail"     => $detail->id,
+                        "vehicle_type_price_id"      => $detail->vehicle_type_price_id,
+                        "key"                        => $detail->vehicleTypePrice->key,
+                        "name"                       => $detail->vehicleTypePrice->name,
+                        "price"                      => $detail->vehicleTypePrice->price,
+                    ));
+                }
+
+                $arrItem = array_merge($arrItem, array(
+                    "vehicle_type"  => $objServiceVehicle->vehicleType->name,
+                    "vehicle_brand" => $objServiceVehicle->marca,
+                    "vehicle_color" => $objServiceVehicle->color,
+                    "latitude"      => $objServiceVehicle->latitude,
+                    "altitude"      => $objServiceVehicle->altitude,
+                    "details"       => $arrDetails
+                ));
+            }
+
+            array_push($response, $arrItem);
         }
 
         return response()->json($response, 200);
@@ -320,29 +420,41 @@ class ServiceController extends Controller
     }
 
     public function acceptService(Request $request) {
-        $response   = array();
         $service    = Service::find($request->service_id);
 
-        if(is_null($service)){
+        if(is_null($service))
             return response()->json( ['error'=> "No se encontro el servicio con id ".$request->service_id], 403);
-        }
 
-        if($service->service_status_id == 1) {
-            try {
-                DB::beginTransaction();
+        if($service->service_status_id != 1)
+            return response()->json( ['error'=> "El servicio ya fue aceptado por otro TAYDER."], 403);
 
-                $service->service_status_id     = 2;
-                $service->provider_user_id      = $request->user_id;
-                $service->save();
+        try {
+            DB::beginTransaction();
 
-                if(is_null($service->charge_token)) {
-                    \Stripe\Stripe::setApiKey(env('STRIPE_SECRET'));
-                    $charge = \Stripe\Charge::retrieve($service->charge_token);
-                    $charge->capture();
-                }
+            $service->service_status_id     = 2;
+            $service->provider_user_id      = $request->user_id;
+            $service->save();
 
-                $arrDistribution    = array();
+            if(is_null($service->charge_token)) {
+                \Stripe\Stripe::setApiKey(env('STRIPE_SECRET'));
+                $charge = \Stripe\Charge::retrieve($service->charge_token);
+                $charge->capture();
+            }
 
+            $arrDistribution    = array();
+            $arrDetails         = array();
+            $response           = array(
+                "id"                    => $service->id,
+                "request_user_id"       => $service->request_user_id,
+                "request_user_name"     => $service->requester->info->name. " ".$service->requester->info->last_name,
+                "provider_user_id"      => $service->request_user_id,
+                "provider_user_name"    => is_null($service->provider_user_name) ? "" : $service->provider->info->name. " ".$service->provider->info->last_name,
+                "dt_request"            => $service->dt_request,
+                "has_consumables"       => $service->has_consumables,
+                "created_at"            => Carbon::parse($service->created_at)->format("Y-m-d H:i:s")
+            );
+
+            if($service->service_type_id == 1) {
                 foreach($service->property->userPropertyDistribution as $distribution) {
                     array_push($arrDistribution, array(
                         "user_property_distribution_id"     => $distribution->id,
@@ -354,52 +466,65 @@ class ServiceController extends Controller
                     ));
                 }
 
-                array_push($response, array(
-                    "id"                    => $service->id,
-                    "request_user_id"       => $service->request_user_id,
-                    "request_user_name"     => $service->requester->info->name. " ".$service->requester->info->last_name,
-                    "provider_user_id"      => $service->request_user_id,
-                    "provider_user_name"    => is_null($service->provider_user_name) ? "" : $service->provider->info->name. " ".$service->provider->info->last_name,
+                $response = array_merge($response, array(
+                    "distribution"          => $arrDistribution,
                     "property_name"         => $service->property->name,
                     "property_latitude"     => $service->property->latitude,
                     "property_altitude"     => $service->property->altitude,
                     "property_type_id"      => $service->property->propertyType->id,
                     "property_type_name"    => $service->property->propertyType->name,
-                    "distribution"          => $arrDistribution,
-                    "dt_request"            => $service->dt_request,
-                    "has_consumables"       => $service->has_consumables,
-                    "created_at"            => Carbon::parse($service->created_at)->format("Y-m-d H:i:s")
+                    
                 ));
-
-                DB::commit();
-
-                $this->pusher->trigger('notifications'.$service->request_user_id, 'service-status', ["message" => "Tu servicio ha sido aceptado por un Tayder."]);
-            } catch(Exception $exception) {
-                DB::rollBack();
-                return response()->json( ['error'=> $exception], 403);
             }
-        } else {
-            return response()->json( ['error'=> "El servicio ya fue aceptado por otro TAYDER."], 403);
-        }
 
-        return response()->json($response, 200);
+            if($service->service_type_id == 2) {
+                $objServiceVehicle = ServiceVehicle::where('service_id', $service->id)->first();
+
+                foreach($objServiceVehicle->details as $detail) {
+                    array_push($arrDetails, array(
+                        "service_vehicle_detail"     => $detail->id,
+                        "vehicle_type_price_id"      => $detail->vehicle_type_price_id,
+                        "key"                        => $detail->vehicleTypePrice->key,
+                        "name"                       => $detail->vehicleTypePrice->name,
+                        "price"                      => $detail->vehicleTypePrice->price,
+                    ));
+                }
+
+                $response = array_merge($response, array(
+                    "vehicle_type"  => $objServiceVehicle->vehicleType->name,
+                    "vehicle_brand" => $objServiceVehicle->marca,
+                    "vehicle_color" => $objServiceVehicle->color,
+                    "latitude"      => $objServiceVehicle->latitude,
+                    "altitude"      => $objServiceVehicle->altitude,
+                    "details"       => $arrDetails
+                ));
+            }
+
+            DB::commit();
+
+            $this->pusher->trigger('notifications'.$service->request_user_id, 'service-status', ["message" => "Tu servicio ha sido aceptado por un Tayder."]);
+
+            return response()->json($response, 200);
+
+        } catch(Exception $exception) {
+            DB::rollBack();
+            return response()->json( ['error'=> $exception], 403);
+        }
     }
 
     public function startService(Request $request) {
         $response    = array();
         $service     = Service::find($request->service_id);
         
-        if(is_null($service)) {
+        if(is_null($service))
             return response()->json( ['error' => "No se encontro el servicio con id ".$request->service_id], 403);
-        }
-        
+
         $arrServices    = Service::where('service_status_id', 3)
                             ->where('provider_user_id', $service->provider_user_id)
                             ->get();
 
-        if(sizeof($arrServices) > 0) {
+        if(sizeof($arrServices) > 0)
             return response()->json(['error' => 'Actualmente tienes un servicio en curso, intenta de nuevo después de finalizarlo'], 403);
-        }
 
         if($service->service_status_id == 2) {
             try {
@@ -419,12 +544,10 @@ class ServiceController extends Controller
     }
 
     public function finishService(Request $request) {
-        $response   = array();
         $service    = Service::find($request->service_id);
 
-        if(is_null($service)){
+        if(is_null($service))
             return response()->json( ['error'=> "No se encontro el servicio con id ".$request->service_id], 403);
-        }
 
         if($service->service_status_id == 3) {
             try {
@@ -434,10 +557,10 @@ class ServiceController extends Controller
 
                 $this->pusher->trigger('notifications'.$service->request_user_id, 'service-status', ["message" => "Un servicio ha finalizado"]);
             } catch(Exception $exception) {
-                return response()->json( ['error'=> $exception], 403);
+                return response()->json(['error'=> $exception], 403);
             }
         } else {
-            return response()->json( ['error'=> "El servicio no se encuentra en estatus EN CURSO."], 403);
+            return response()->json(['error'=> "El servicio no se encuentra en estatus EN CURSO."], 403);
         }
 
         return response()->json($service, 200);
@@ -516,9 +639,8 @@ class ServiceController extends Controller
                     $service->service_status_id = 5;
                     $service->dt_canceled       = Now();
 
-                    if(!is_null($refund)) {
+                    if(!is_null($refund))
                         $service->refund_token      = $refund->id;
-                    }
 
                     $service->save();
 

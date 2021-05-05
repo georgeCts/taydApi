@@ -48,4 +48,22 @@ class ServiceValidator extends FormRequest
 
         return true;
     }
+
+    public function storeAdditional(Request $request) {
+        $validator = Validator::make($request->all(), [
+            'user_id'                   => 'required|integer|exists:users,id',
+            'service_type_id'           => 'required|integer|exists:services_types,id',
+            'stripe_customer_source_id' => 'required|integer|exists:stripe_customers_sources,id',
+            'date'                      => 'required|date_format:Y-m-d',
+            'time'                      => 'required|date_format:H:i:s',
+            'service_details'           => 'required|array',
+            'service_cost'              => 'required|regex:/^\d+(\.\d{1,2})?$/',
+            'discount'                  => 'nullable|integer'
+        ]);
+
+        if($validator->fails())
+            return response()->json($validator->errors());
+
+        return true;
+    }
 }
