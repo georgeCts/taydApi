@@ -12,6 +12,8 @@ class ServiceVehicle extends Model
         'vehicle_type_id',
         'marca',
         'color',
+        'direccion',
+        'referencia',
         'latitude',
         'altitude',
     ];

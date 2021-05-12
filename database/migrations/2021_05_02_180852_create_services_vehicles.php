@@ -19,6 +19,8 @@ class CreateServicesVehicles extends Migration
             $table->unsignedBigInteger('vehicle_type_id');
             $table->string('marca');
             $table->string('color');
+            $table->text('direccion');
+            $table->string('referencia');
             $table->string('latitude');
             $table->string('altitude');
             $table->timestamps();
