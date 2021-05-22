@@ -16,7 +16,10 @@ class DatabaseSeeder extends Seeder
             UsersInfoTableSeeder::class,
             PropertyTypeTableSeeder::class,
             PropertyTypePricesSeeder::class,
+            VehicleTypeTableSeeder::class,
+            VehicleTypePricesSeeder::class,
             GeneralSettingsSeeder::class,
+            ServiceTypesSeeder::class,
             ServiceStatusSeeder::class,
         ]);
     }

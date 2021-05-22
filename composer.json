@@ -15,7 +15,8 @@
         "laravel/passport": "^8.4",
         "laravel/tinker": "^2.0",
         "pusher/pusher-php-server": "^4.1",
-        "stripe/stripe-php": "^7.20"
+        "stripe/stripe-php": "^7.20",
+        "twilio/sdk": "^6.20"
     },
     "require-dev": {
         "facade/ignition": "^1.4",

@@ -13,6 +13,7 @@ class Service extends Model
 {
     protected $table = 'services';
     protected $fillable =  [
+        'service_type_id',
         'request_user_id',
         'provider_user_id',
         'user_property_id',

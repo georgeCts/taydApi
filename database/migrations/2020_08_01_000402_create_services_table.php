@@ -15,6 +15,7 @@ class CreateServicesTable extends Migration
     {
         Schema::create('services', function (Blueprint $table) {
             $table->bigIncrements('id');
+            $table->unsignedBigInteger('service_type_id')->nullable();
             $table->unsignedBigInteger('request_user_id');
             $table->unsignedBigInteger('provider_user_id')->nullable();
             $table->unsignedBigInteger('user_property_id')->nullable();
@@ -40,6 +41,7 @@ class CreateServicesTable extends Migration
             $table->text('comments')->nullable();
             $table->timestamps();
 
+            $table->foreign('service_type_id')->references('id')->on('services_types');
             $table->foreign('request_user_id')->references('id')->on('users');
             $table->foreign('provider_user_id')->references('id')->on('users');
             $table->foreign('user_property_id')->references('id')->on('users_properties');

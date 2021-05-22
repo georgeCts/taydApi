@@ -36,6 +36,8 @@ class PropertyValidator extends FormRequest
             'user_id'           => 'required|integer|exists:users,id',
             'property_type_id'  => 'required|integer|exists:properties_types,id',
             'name'              => 'required|string|max:200',
+            'address'           => 'required|string|max:200',
+            'reference'         => 'required|string|max:200',
             'latitude'          => 'required|string|max:20',
             'altitude'          => 'required|string|max:20',
             'distribution'      => 'nullable|array'

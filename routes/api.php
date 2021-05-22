@@ -16,6 +16,9 @@ Route::group(['prefix' => 'auth'], function () {
     Route::post('/login', 'AuthController@login');
     Route::post('/signup', 'AuthController@signup');
     Route::get('/logout', 'AuthController@logout');
+
+    Route::post('/send-verification', 'AuthController@sendVerificationCode');
+    Route::post('/confirm-verification', 'AuthController@confirmVerificationCode');
 });
 Route::group(['prefix' => 'channels'], function() {
     Route::post('/auth', 'ChannelsController@auth');
@@ -46,6 +49,14 @@ Route::group(['middleware' => 'auth:api'], function() {
         Route::get('/', 'PropertyTypeController@getAll');
         //Route::post('/', 'PropertyController@store');
         //Route::get('/{id}', 'PropertyController@get');
+    });
+
+    Route::group(['prefix' => 'vehicles'], function() {
+
+    });
+
+    Route::group(['prefix' => 'vehicles-types'], function() {
+        Route::get('/', 'VehicleTypeController@getAll');
     });
 
     Route::group(['prefix' => 'general-settings'], function() {

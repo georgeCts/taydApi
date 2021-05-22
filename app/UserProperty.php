@@ -14,6 +14,8 @@ class UserProperty extends Model
         'user_id',
         'property_type_id',
         'name',
+        'address',
+        'reference',
         'latitude',
         'altitude',
         'is_predetermined'
