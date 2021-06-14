@@ -15,7 +15,7 @@ class VehicleTypePricesSeeder extends Seeder
         $items = array(
             [
                 'vehicle_type_id'   => 1,
-                'key'               => 'LAVADO_ASPIRADO ',
+                'key'               => 'LAVADO_ASPIRADO',
                 'name'              => 'Lavado y aspirado',
                 'price'             => 90
             ],
@@ -39,7 +39,7 @@ class VehicleTypePricesSeeder extends Seeder
             ],
             [
                 'vehicle_type_id'   => 2,
-                'key'               => 'LAVADO_ASPIRADO ',
+                'key'               => 'LAVADO_ASPIRADO',
                 'name'              => 'Lavado y aspirado',
                 'price'             => 100
             ],
@@ -63,7 +63,7 @@ class VehicleTypePricesSeeder extends Seeder
             ],
             [
                 'vehicle_type_id'   => 3,
-                'key'               => 'LAVADO_ASPIRADO ',
+                'key'               => 'LAVADO_ASPIRADO',
                 'name'              => 'Lavado y aspirado',
                 'price'             => 125
             ],
@@ -87,7 +87,7 @@ class VehicleTypePricesSeeder extends Seeder
             ],
             [
                 'vehicle_type_id'   => 4,
-                'key'               => 'LAVADO_ASPIRADO ',
+                'key'               => 'LAVADO_ASPIRADO',
                 'name'              => 'Lavado y aspirado',
                 'price'             => 130
             ],
@@ -111,7 +111,7 @@ class VehicleTypePricesSeeder extends Seeder
             ],
             [
                 'vehicle_type_id'   => 5,
-                'key'               => 'LAVADO_ASPIRADO ',
+                'key'               => 'LAVADO_ASPIRADO',
                 'name'              => 'Lavado y aspirado',
                 'price'             => 160
             ],
