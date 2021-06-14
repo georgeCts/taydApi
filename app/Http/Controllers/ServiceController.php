@@ -64,7 +64,7 @@ class ServiceController extends Controller
 
             //$serviceSetting = GeneralSetting::where('key', 'SERVICIO_DEPARTAMENTO')->where('active', true)->first();
             $taxPercent     = GeneralSetting::where('key', 'IVA_PORCENTAJE')->where('active', true)->first();
-            $taydPercent    = GeneralSetting::where('key', 'TAYD_COMISION')->where('active', true)->first();
+            $taydPercent    = GeneralSetting::where('key', 'TAYD_COMISION_30')->where('active', true)->first();
             $stripePercent  = GeneralSetting::where('key', 'STRIPE_COMISION_PORCENTAJE')->where('active', true)->first();
             $stripeExtra    = GeneralSetting::where('key', 'STRIPE_COMISION_EXTRA')->where('active', true)->first();
     
@@ -116,6 +116,8 @@ class ServiceController extends Controller
                 $serviceVehicle->color              = $request->color;
                 $serviceVehicle->latitude           = $request->latitude;
                 $serviceVehicle->altitude           = $request->altitude;
+                $serviceVehicle->direccion          = $request->address;
+                $serviceVehicle->referencia         = $request->reference;
                 $serviceVehicle->save();
 
                 foreach($request->service_details as $item) {
@@ -301,12 +303,14 @@ class ServiceController extends Controller
                 }
 
                 $arrItem = array_merge($arrItem, array(
-                    "vehicle_type"  => $objServiceVehicle->vehicleType->name,
-                    "vehicle_brand" => $objServiceVehicle->marca,
-                    "vehicle_color" => $objServiceVehicle->color,
-                    "latitude"      => $objServiceVehicle->latitude,
-                    "altitude"      => $objServiceVehicle->altitude,
-                    "details"       => $arrDetails
+                    "vehicle_type"      => $objServiceVehicle->vehicleType->name,
+                    "vehicle_brand"     => $objServiceVehicle->marca,
+                    "vehicle_color"     => $objServiceVehicle->color,
+                    "property_latitude" => $objServiceVehicle->latitude,
+                    "property_altitude" => $objServiceVehicle->altitude,
+                    "address"           => $objServiceVehicle->direccion,
+                    "reference"         => $objServiceVehicle->referencia,
+                    "details"           => $arrDetails
                 ));
             }
 

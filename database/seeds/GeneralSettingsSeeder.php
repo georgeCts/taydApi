@@ -15,7 +15,12 @@ class GeneralSettingsSeeder extends Seeder
             [
                 'key'           => 'TAYD_COMISION',
                 'description'   => 'Comisión perteneciente a Tayd por transaccion.',
-                'value'         => '20'
+                'value'         => '15'
+            ],
+            [
+                'key'           => 'TAYD_COMISION_30',
+                'description'   => 'Comisión perteneciente a Tayd por transaccion.',
+                'value'         => '30'
             ],
             [
                 'key'           => 'STRIPE_COMISION_PORCENTAJE',
